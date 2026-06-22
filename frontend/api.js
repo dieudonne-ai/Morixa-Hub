@@ -7,7 +7,10 @@
  *  - User session helpers
  */
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE =
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000/api"
+    : "https://morixa-hub-api.onrender.com/api";
 
 // ── Pages that don't require authentication ──────────────────
 const PUBLIC_PAGES = ["/login.html"];
@@ -45,7 +48,7 @@ async function apiFetch(endpoint, options = {}) {
 
   let res;
   try {
-    res = await fetch(`http://localhost:5000/api${endpoint}`, { ...options, headers });
+    res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
   } catch(e) {
     throw { error: "Server unreachable. Please check your connection." };
   }
@@ -293,7 +296,7 @@ function timeAgo(dateStr) {
 
 async function downloadFile(fileId, fileName) {
   try {
-    const res = await fetch(`http://localhost:5000/api/files/download/${fileId}`, {
+    const res = await fetch(`${API_BASE}/files/download/${fileId}`, {
       headers: { "Authorization": `Bearer ${getToken()}` }
     });
     if (!res.ok) {
