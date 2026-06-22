@@ -22,7 +22,8 @@ Structure du projet :
 # app.py  —  Point d'entrée principal
 # ============================================================
 from dotenv import load_dotenv
-load_dotenv() 
+load_dotenv()
+import os
 from flask import Flask, app
 from flask_cors import CORS
 from models import db

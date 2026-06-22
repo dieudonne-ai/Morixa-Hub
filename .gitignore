@@ -1,9 +1,8 @@
-.env
-
+.env/
 __pycache__
 instance
 /uploads
-
+.env
 config.py
 medhub_schema_sql.sql
 /trash
