@@ -693,7 +693,7 @@ async function submitVerification() {
   fd.append("document",       docInput.files[0]);
 
   try {
-    await fetch("http://localhost:5000/api/verification/submit", {
+    await fetch(`${API_BASE}/verification/submit`, {
       method:  "POST",
       headers: { "Authorization": `Bearer ${getToken()}` },
       body:    fd,

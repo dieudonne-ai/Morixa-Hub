@@ -395,7 +395,7 @@ async function starRepo() {
 
 async function downloadFile(fileId, fileName) {
   try {
-    const res = await fetch(`http://localhost:5000/api/files/download/${fileId}`, {
+    const res = await fetch(`${API_BASE}/files/download/${fileId}`, {
       headers: { "Authorization": `Bearer ${getToken()}` }
     });
     if (!res.ok) {

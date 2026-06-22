@@ -189,7 +189,10 @@
 
 <script src="/api.js"></script>
 <script>
-  const API = "http://localhost:5000/api";
+  const API_BASE =
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000/api"
+    : "https://morixa-hub-api.onrender.com/api";
   let currentFilter = "", currentPage = 1, totalPages = 1, searchTimer = null;
   let likedPosts = new Set();
 

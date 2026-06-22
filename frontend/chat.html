@@ -556,7 +556,7 @@ async function sendAttachment(input) {
     const fd = new FormData();
     fd.append("file",    file);
     fd.append("user_id", getUserId());
-    const uploadRes = await fetch("http://localhost:5000/api/files/upload", {
+    const uploadRes = await fetch(`${API_BASE}/files/upload`, {
       method:  "POST",
       headers: { "Authorization": `Bearer ${getToken()}` },
       body:    fd,

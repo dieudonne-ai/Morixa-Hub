@@ -311,10 +311,10 @@
     document.getElementById("doc-modal-title").textContent = path.split(/[\\/]/).pop();
     const content = document.getElementById("doc-modal-content");
     const dlLink  = document.getElementById("doc-download-link");
-    dlLink.href   = `http://localhost:5000/api/verification/document/${requestId}`;
+    dlLink.href   = `${API_BASE}/verification/document/${requestId}`;
 
     if (isImg) {
-      content.innerHTML = `<img src="http://localhost:5000/api/verification/document/${requestId}" alt="Verification document">`;
+      content.innerHTML = `<img src="${API_BASE}/verification/document/${requestId}" alt="Verification document">`;
     } else {
       content.innerHTML = `
         <div style="text-align:center;padding:32px;color:var(--text-3);">
