@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morixa Hub — Repositories</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="api.js"></script>
+  <style>
+    .page-wrap { max-width: 1000px; margin: 0 auto; padding: 28px 20px; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+
+    /* View tabs */
+    .view-tabs {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 3px;
+      margin-bottom: 18px;
+      gap: 2px;
+    }
+
+    .vtab {
+      flex: 1;
+      text-align: center;
+      padding: 7px 12px;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-3);
+      transition: all 0.12s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .vtab.active { background: var(--surface-3); color: var(--text-1); }
+
+    /* Toolbar */
+    .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+    .filter-select {
+      padding: 7px 12px;
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-family: var(--font);
+      background: var(--surface-2);
+      color: var(--text-1);
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Repo grid */
+    .repo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 12px; }
+
+    .repo-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .repo-card:hover { border-color: var(--border-2); }
+
+    .repo-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+
+    .repo-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+    }
+
+    .repo-desc { font-size: 12px; color: var(--text-2); line-height: 1.65; flex: 1; }
+
+    .repo-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-3);
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+    }
+
+    .repo-meta span { display: flex; align-items: center; gap: 4px; }
+    .repo-meta .owner { display: flex; align-items: center; gap: 5px; }
+
+    .star-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid var(--border-2);
+      background: transparent;
+      cursor: pointer;
+      color: var(--text-3);
+      transition: all 0.12s;
+      font-family: var(--mono);
+    }
+
+    .star-btn:hover { border-color: var(--border-3); color: var(--text-1); }
+    .star-btn.starred { color: var(--tag-cas-fg); border-color: var(--tag-cas-bdr); background: var(--tag-cas-bg); }
+
+    /* Vis toggle */
+    .vis-row { display: flex; gap: 8px; }
+    .vis-opt {
+      flex: 1;
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      padding: 11px 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.12s;
+      background: var(--surface-2);
+    }
+    .vis-opt:hover { border-color: var(--border-3); }
+    .vis-opt.selected { border-color: var(--border-3); background: var(--surface-3); }
+    .vis-opt i { font-size: 18px; color: var(--text-2); display: block; margin-bottom: 4px; }
+    .vis-opt span { font-size: 12px; font-weight: 500; color: var(--text-1); }
+
+    .empty-state { grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-3); }
+    .empty-state i { font-size: 44px; display: block; margin-bottom: 12px; }
+
+    .skeleton-repo { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">
+    <div class="logo-box"><i class=""><img src="logo/logo.png" alt="" class="logo-box"></i></div>
+    Morixa Hub
+  </a>
+  <div class="nav-links">
+    <a href="/"><i class="ti ti-home"></i> Feed</a>
+    <a href="/repositories.html" class="active"><i class="ti ti-folder"></i> Repositories</a>
+    <a href="/chat.html"><i class="ti ti-message"></i> Messages</a>
+    <a href="/notifications.html"><i class="ti ti-bell"></i> Notifications</a>
+    <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <div class="page-title"><i class="ti ti-folder"></i> Medical Repositories</div>
+    <button class="btn btn-primary" onclick="showNewRepo()"><i class="ti ti-plus"></i> New repository</button>
+  </div>
+
+  <div class="view-tabs">
+    <div class="vtab active" onclick="switchView(this,'all')"><i class="ti ti-world"></i> All public</div>
+    <div class="vtab" onclick="switchView(this,'mine')"><i class="ti ti-user"></i> Mine</div>
+    <div class="vtab" onclick="switchView(this,'starred')"><i class="ti ti-star"></i> Starred</div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box" style="flex:1;">
+      <i class="ti ti-search"></i>
+      <input type="text" placeholder="Search repositories..." id="repo-search" oninput="filterRepos()">
+    </div>
+    <select class="filter-select" id="type-filter" onchange="filterRepos()">
+      <option value="">All types</option>
+      <option value="protocole">Protocol</option>
+      <option value="cas_clinique">Clinical case</option>
+      <option value="recherche">Research</option>
+      <option value="guide">Guide</option>
+    </select>
+    <select class="filter-select" id="sort-filter" onchange="sortRepos()">
+      <option value="stars">Most starred</option>
+      <option value="recent">Most recent</option>
+    </select>
+  </div>
+
+  <div class="repo-grid" id="repo-grid">
+    <!-- Skeletons -->
+    ${Array(6).fill(`
+      <div class="skeleton-repo">
+        <div class="skeleton" style="height:12px;width:60%;"></div>
+        <div class="skeleton" style="height:40px;"></div>
+        <div class="skeleton" style="height:10px;width:80%;"></div>
+      </div>`).join("")}
+  </div>
+</div>
+
+<!-- New Repo Modal -->
+<div class="modal hidden" id="new-repo-modal">
+  <div class="modal-box">
+    <div class="modal-title"><i class="ti ti-folder-plus"></i> New repository</div>
+    <div class="field-group">
+      <label class="field-label">Repository name</label>
+      <input class="field-input" type="text" id="new-name" placeholder="e.g. malaria-protocols-2024">
+      <small style="font-size:11px;color:var(--text-3);margin-top:3px;">Lowercase, numbers and hyphens only.</small>
+    </div>
+    <div class="field-group" style="margin-top:12px;">
+      <label class="field-label">Description</label>
+      <textarea class="field-input" id="new-desc" placeholder="What is this repository about?" style="min-height:70px;"></textarea>
+    </div>
+    <div class="field-group" style="margin-top:12px;">
+      <label class="field-label">Type</label>
+      <select class="field-input" id="new-type">
+        <option value="protocole">Protocol</option>
+        <option value="cas_clinique">Clinical case</option>
+        <option value="recherche">Research</option>
+        <option value="guide">Guide</option>
+      </select>
+    </div>
+    <div class="field-group" style="margin-top:12px;">
+      <label class="field-label">Visibility</label>
+      <div class="vis-row">
+        <div class="vis-opt selected" onclick="selectVis(this,'public')">
+          <i class="ti ti-world"></i><span>Public</span>
+        </div>
+        <div class="vis-opt" onclick="selectVis(this,'private')">
+          <i class="ti ti-lock"></i><span>Private</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeNewRepo()">Cancel</button>
+      <button class="btn btn-primary" onclick="createRepo()"><i class="ti ti-folder-plus"></i> Create</button>
+    </div>
+  </div>
+</div>
+
+<script src="/api.js"></script>
+<script>
+  let ALL_REPOS  = [];
+  let currentView = "all";
+  let visibility  = "public";
+
+  const TYPE_TAG   = { protocole:"tag-proto", cas_clinique:"tag-cas", recherche:"tag-recherche", guide:"tag-article" };
+  const TYPE_LABEL = { protocole:"Protocol", cas_clinique:"Clinical case", recherche:"Research", guide:"Guide" };
+
+
+async function init() {
+  try {
+    const data = await apiFetch(`/repos/?viewer_id=${getUserId()}`);
+    ALL_REPOS  = (data.repos || []).map(r => ({ ...r, _starred: !!r.is_starred }));
+    filterRepos();
+  } catch(e) {
+    document.getElementById("repo-grid").innerHTML =
+      `<div class="empty-state"><i class="ti ti-wifi-off"></i><p>Could not load repositories.</p></div>`;
+  }
+}
+
+  function renderRepos(list) {
+    if (!list.length) {
+      document.getElementById("repo-grid").innerHTML =
+        `<div class="empty-state"><i class="ti ti-folder-off"></i><p>No repositories found.</p></div>`;
+      return;
+    }
+    document.getElementById("repo-grid").innerHTML = list.map(r => `
+      <div class="repo-card" onclick="window.location='/repo-detail.html?id=${r.id}'">
+        <div class="repo-card-top">
+          <div class="repo-name">
+            <i class="ti ${r.is_public?'ti-folder':'ti-folder-lock'}" style="font-size:14px;color:var(--text-2);"></i>
+            ${r.name}
+          </div>
+          <button class="star-btn ${r._starred?'starred':''}"
+            onclick="event.stopPropagation(); toggleStar(${r.id}, this)">
+            <i class="ti ti-star"></i> ${r.stars}
+          </button>
+        </div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <span class="tag ${TYPE_TAG[r.repo_type]||'tag-neutral'}">${TYPE_LABEL[r.repo_type]||r.repo_type}</span>
+          <span class="tag tag-neutral">
+            <i class="ti ${r.is_public?'ti-world':'ti-lock'}" style="font-size:10px"></i>
+            ${r.is_public?'Public':'Private'}
+          </span>
+        </div>
+        <div class="repo-desc">${r.description || "No description."}</div>
+        <div class="repo-meta">
+          <span class="owner">
+            <div class="avatar" style="width:18px;height:18px;font-size:8px;">
+              ${(r.owner?.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2)}
+            </div>
+            ${r.owner?.full_name?.split(" ").slice(-1)[0] || "Unknown"}
+          </span>
+          <span><i class="ti ti-file"></i> ${r.files_count}</span>
+          <span><i class="ti ti-git-fork"></i> ${r.forks}</span>
+          <span style="margin-left:auto;">${timeAgo(r.created_at)}</span>
+        </div>
+      </div>`).join("");
+  }
+
+  function filterRepos() {
+    const q    = document.getElementById("repo-search").value.toLowerCase();
+    const type = document.getElementById("type-filter").value;
+    const uid  = getUserId();
+
+    let list = ALL_REPOS.filter(r => {
+      if (currentView === "mine"    && r.owner?.id !== uid) return false;
+      if (currentView === "starred" && !r._starred)         return false;
+      if (type && r.repo_type !== type)                     return false;
+      if (q && !r.name.toLowerCase().includes(q) && !(r.description||"").toLowerCase().includes(q)) return false;
+      return true;
+    });
+
+    sortRepos(list);
+  }
+
+  function sortRepos(list) {
+    const sort  = document.getElementById("sort-filter").value;
+    const items = list || ALL_REPOS;
+    const sorted = [...items].sort((a,b) => sort==="stars"
+      ? b.stars - a.stars
+      : new Date(b.created_at) - new Date(a.created_at));
+    renderRepos(sorted);
+  }
+
+  function switchView(btn, view) {
+    document.querySelectorAll(".vtab").forEach(t=>t.classList.remove("active"));
+    btn.classList.add("active");
+    currentView = view;
+    filterRepos();
+  }
+
+
+async function toggleStar(id, btn) {
+  const r = ALL_REPOS.find(x => x.id === id);
+  if (!r) return;
+  btn.disabled = true;
+  try {
+    const data = await apiFetch(`/repos/${id}/star`, {
+      method: "POST",
+      body: JSON.stringify({ user_id: getUserId() }),
+    });
+    r._starred = data.is_starred;
+    r.stars    = data.stars;
+    btn.className = `star-btn ${r._starred ? "starred" : ""}`;
+    btn.innerHTML  = `<i class="ti ti-star"></i> ${r.stars}`;
+  } catch(e) {
+    // ignore
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+  function showNewRepo()  { document.getElementById("new-repo-modal").classList.remove("hidden"); }
+  function closeNewRepo() { document.getElementById("new-repo-modal").classList.add("hidden"); }
+  function selectVis(el, val) {
+    visibility = val;
+    document.querySelectorAll(".vis-opt").forEach(o=>o.classList.remove("selected"));
+    el.classList.add("selected");
+  }
+
+  async function createRepo() {
+    const name = document.getElementById("new-name").value.trim();
+    const desc = document.getElementById("new-desc").value.trim();
+    const type = document.getElementById("new-type").value;
+    if (!name) return alert("Please enter a repository name.");
+    try {
+      const data = await apiFetch("/repos/",{method:"POST",body:JSON.stringify({
+        user_id:getUserId(), name, description:desc, repo_type:type, is_public:visibility==="public"
+      })});
+      ALL_REPOS.unshift({...data, _starred:false, files_count:0, owner:getUser()});
+      closeNewRepo();
+      filterRepos();
+    } catch(e) { alert(e.error||"Could not create repository."); }
+  }
+
+  function timeAgo(s) {
+    if (!s) return "";
+    const d=(Date.now()-new Date(s))/1000;
+    if(d<60) return "just now";
+    if(d<3600) return `${Math.floor(d/60)}m ago`;
+    if(d<86400) return `${Math.floor(d/3600)}h ago`;
+    return `${Math.floor(d/86400)}d ago`;
+  }
+
+  init();
+</script>
+</body>
+</html>

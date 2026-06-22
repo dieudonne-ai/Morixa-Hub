@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morixa Hub — Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+    .page-wrap { max-width: 960px; margin: 0 auto; padding: 28px 20px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* Stats bar */
+    .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 16px 18px; }
+    .stat-num  { font-size: 26px; font-weight: 700; color: var(--text-1); font-family: var(--mono); letter-spacing: -0.03em; }
+    .stat-label{ font-size: 12px; color: var(--text-3); margin-top: 4px; }
+
+    /* Requests */
+    .request-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .request-header { display: flex; align-items: center; gap: 12px; }
+    .request-info   { flex: 1; }
+    .request-name   { font-size: 14px; font-weight: 600; color: var(--text-1); }
+    .request-meta   { font-size: 12px; color: var(--text-3); font-family: var(--mono); margin-top: 3px; }
+
+    .request-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 13px;
+    }
+
+    .detail-item { display: flex; flex-direction: column; gap: 3px; }
+    .detail-label { font-size: 11px; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .detail-value { color: var(--text-1); font-family: var(--mono); font-size: 13px; }
+
+    .doc-preview {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.12s;
+    }
+    .doc-preview:hover { border-color: var(--border-3); }
+    .doc-preview i { font-size: 22px; color: var(--text-2); }
+    .doc-name  { flex: 1; font-size: 13px; color: var(--text-1); font-family: var(--mono); }
+    .doc-hint  { font-size: 11px; color: var(--text-3); }
+
+    .review-actions { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
+    .review-note { flex: 1; min-width: 200px; }
+    .review-note input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      font-size: 13px;
+      background: var(--surface-2);
+      color: var(--text-1);
+      font-family: var(--font);
+      outline: none;
+    }
+    .review-note input:focus { border-color: var(--border-3); }
+
+    .btn-approve { background: var(--tag-art-bg); color: var(--tag-art-fg); border-color: var(--tag-art-bdr); }
+    .btn-approve:hover { border-color: var(--tag-art-fg); }
+    .btn-reject  { background: var(--tag-cas-bg); color: var(--tag-cas-fg); border-color: var(--tag-cas-bdr); }
+    .btn-reject:hover { border-color: var(--tag-cas-fg); }
+
+    .status-tag { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: var(--radius-sm); border: 1px solid; }
+    .status-approved { background: var(--tag-art-bg); color: var(--tag-art-fg); border-color: var(--tag-art-bdr); }
+    .status-rejected { background: var(--tag-cas-bg); color: var(--tag-cas-fg); border-color: var(--tag-cas-bdr); }
+    .status-pending  { background: var(--tag-proto-bg); color: var(--tag-proto-fg); border-color: var(--tag-proto-bdr); }
+
+    /* Tab navigation */
+    .tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 3px; }
+    .tab-btn { flex: 1; text-align: center; padding: 7px; border-radius: calc(var(--radius) - 2px); font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-3); transition: all 0.12s; border: none; background: transparent; font-family: var(--font); }
+    .tab-btn.active { background: var(--surface-3); color: var(--text-1); }
+
+    .empty-state { text-align: center; padding: 48px; color: var(--text-3); }
+    .empty-state i { font-size: 40px; display: block; margin-bottom: 12px; }
+
+    /* Doc modal */
+    .doc-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 200; }
+    .doc-modal.hidden { display: none; }
+    .doc-modal-box { background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--radius-xl); padding: 20px; width: 700px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column; gap: 12px; }
+    .doc-modal-box img { max-width: 100%; border-radius: var(--radius); object-fit: contain; max-height: 60vh; }
+    .doc-modal-footer { display: flex; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">
+    <div class="logo-box"><i class=""><img src="logo/logo.png" alt="" class="logo-box"></i></div>
+    Morixa Hub
+  </a>
+  <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+    <span style="font-size:12px; color:var(--text-3); font-family:var(--mono);">Admin panel</span>
+    <a href="/" class="btn btn-sm"><i class="ti ti-arrow-left"></i> Back to app</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+    <div class="page-title"><i class="ti ti-shield-check"></i> Verification Requests</div>
+    <button class="btn" onclick="loadAll()"><i class="ti ti-refresh"></i> Refresh</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card"><div class="stat-num" id="stat-pending">—</div><div class="stat-label">Pending review</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-approved">—</div><div class="stat-label">Approved</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-rejected">—</div><div class="stat-label">Rejected</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-users">—</div><div class="stat-label">Total users</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(this,'pending')">Pending</button>
+    <button class="tab-btn" onclick="switchTab(this,'approved')">Approved</button>
+    <button class="tab-btn" onclick="switchTab(this,'rejected')">Rejected</button>
+    <button class="tab-btn" onclick="switchTab(this,'all')">All</button>
+  </div>
+
+  <div id="requests-container">
+    <div style="text-align:center;padding:40px;color:var(--text-3);">Loading...</div>
+  </div>
+
+</div>
+
+<!-- Document viewer modal -->
+<div class="doc-modal hidden" id="doc-modal">
+  <div class="doc-modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:14px;font-weight:600;color:var(--text-1);" id="doc-modal-title">Document</div>
+      <button class="btn btn-sm" onclick="closeDocModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="doc-modal-content" style="overflow:auto;flex:1;"></div>
+    <div class="doc-modal-footer">
+      <a id="doc-download-link" class="btn" target="_blank"><i class="ti ti-download"></i> Download</a>
+    </div>
+  </div>
+</div>
+
+<script src="/api.js"></script>
+<script>
+  let ALL_REQUESTS = [];
+  let currentTab   = "pending";
+
+  async function loadAll() {
+    try {
+      const [reqs, users] = await Promise.all([
+        apiFetch("/verification/admin/pending"),   // on chargera tout
+        apiFetch("/users/leaderboard")
+      ]);
+
+      // Charger aussi les approuvés/rejetés
+      const all = await apiFetch("/verification/admin/all").catch(() => reqs);
+      ALL_REQUESTS = all.length ? all : reqs;
+
+      // Stats
+      document.getElementById("stat-pending").textContent  = ALL_REQUESTS.filter(r=>r.status==="pending").length;
+      document.getElementById("stat-approved").textContent = ALL_REQUESTS.filter(r=>r.status==="approved").length;
+      document.getElementById("stat-rejected").textContent = ALL_REQUESTS.filter(r=>r.status==="rejected").length;
+      document.getElementById("stat-users").textContent    = users.length;
+
+      renderRequests();
+    } catch(e) {
+      document.getElementById("requests-container").innerHTML =
+        `<div class="empty-state"><i class="ti ti-wifi-off"></i><p>Could not load requests.</p></div>`;
+    }
+  }
+
+  function switchTab(btn, tab) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentTab = tab;
+    renderRequests();
+  }
+
+  function renderRequests() {
+    const list = currentTab === "all"
+      ? ALL_REQUESTS
+      : ALL_REQUESTS.filter(r => r.status === currentTab);
+
+    if (!list.length) {
+      document.getElementById("requests-container").innerHTML =
+        `<div class="empty-state"><i class="ti ti-inbox"></i><p>No ${currentTab} requests.</p></div>`;
+      return;
+    }
+
+    document.getElementById("requests-container").innerHTML =
+      `<div style="display:flex;flex-direction:column;gap:12px;">${list.map(r => renderCard(r)).join("")}</div>`;
+  }
+
+  function renderCard(r) {
+    const u      = r.user || {};
+    const ini    = (u.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2);
+    const isPending = r.status === "pending";
+    const ext    = (r.document_path||"").split(".").pop().toLowerCase();
+    const isImg  = ["jpg","jpeg","png"].includes(ext);
+
+    return `
+      <div class="request-card" id="req-${r.request_id}">
+
+        <div class="request-header">
+          <div class="avatar">${ini}</div>
+          <div class="request-info">
+            <div class="request-name">Dr. ${u.full_name || "Unknown"}</div>
+            <div class="request-meta">${u.specialty||""} · ${u.hospital||""} · ${u.country||""}</div>
+          </div>
+          <span class="status-tag status-${r.status}">${r.status.toUpperCase()}</span>
+        </div>
+
+        <div class="request-details">
+          <div class="detail-item">
+            <span class="detail-label">License number</span>
+            <span class="detail-value">${r.license_number || "—"}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Country</span>
+            <span class="detail-value">${r.country || "—"}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Email</span>
+            <span class="detail-value">${u.email || "—"}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Submitted</span>
+            <span class="detail-value">${r.created_at ? timeAgo(r.created_at) : "—"}</span>
+          </div>
+        </div>
+
+        ${r.document_path ? `
+        <div class="doc-preview" onclick="viewDoc(${r.request_id}, '${r.document_path}', ${isImg})">
+          <i class="ti ${isImg ? 'ti-photo' : 'ti-file-type-pdf'}"></i>
+          <div>
+            <div class="doc-name">${r.document_path.split(/[\\/]/).pop()}</div>
+            <div class="doc-hint">Click to view document</div>
+          </div>
+          <i class="ti ti-eye" style="color:var(--text-3);"></i>
+        </div>` : ""}
+
+        ${isPending ? `
+        <div class="review-actions">
+          <div class="review-note">
+            <input type="text" id="note-${r.request_id}" placeholder="Optional note to the physician...">
+          </div>
+          <button class="btn btn-approve" onclick="review(${r.request_id}, 'approve')">
+            <i class="ti ti-shield-check"></i> Approve
+          </button>
+          <button class="btn btn-reject" onclick="review(${r.request_id}, 'reject')">
+            <i class="ti ti-shield-x"></i> Reject
+          </button>
+        </div>` : `
+        ${r.reviewer_note ? `<div style="font-size:12px;color:var(--text-3);font-style:italic;">Note: ${r.reviewer_note}</div>` : ""}`}
+
+      </div>`;
+  }
+
+  async function review(requestId, action) {
+    const note = document.getElementById(`note-${requestId}`)?.value.trim() || "";
+    const btn  = document.querySelector(`#req-${requestId} .btn-${action === "approve" ? "approve" : "reject"}`);
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ti ti-loader-2" style="animation:spin 0.7s linear infinite"></i> ${action === "approve" ? "Approving..." : "Rejecting..."}`;
+
+    try {
+      await apiFetch(`/verification/admin/review/${requestId}`, {
+        method: "POST",
+        body: JSON.stringify({ action, reviewer_note: note }),
+      });
+
+      // Mettre à jour localement
+      const req = ALL_REQUESTS.find(r => r.request_id === requestId);
+      if (req) req.status = action === "approve" ? "approved" : "rejected";
+
+      renderRequests();
+      loadStats();
+      showToast(`Request ${action === "approve" ? "approved" : "rejected"} successfully`, "success");
+    } catch(e) {
+      showToast(e.error || "Action failed", "error");
+      btn.disabled = false;
+    }
+  }
+
+  async function loadStats() {
+    document.getElementById("stat-pending").textContent  = ALL_REQUESTS.filter(r=>r.status==="pending").length;
+    document.getElementById("stat-approved").textContent = ALL_REQUESTS.filter(r=>r.status==="approved").length;
+    document.getElementById("stat-rejected").textContent = ALL_REQUESTS.filter(r=>r.status==="rejected").length;
+  }
+
+  function viewDoc(requestId, path, isImg) {
+    document.getElementById("doc-modal-title").textContent = path.split(/[\\/]/).pop();
+    const content = document.getElementById("doc-modal-content");
+    const dlLink  = document.getElementById("doc-download-link");
+    dlLink.href   = `http://localhost:5000/api/verification/document/${requestId}`;
+
+    if (isImg) {
+      content.innerHTML = `<img src="http://localhost:5000/api/verification/document/${requestId}" alt="Verification document">`;
+    } else {
+      content.innerHTML = `
+        <div style="text-align:center;padding:32px;color:var(--text-3);">
+          <i class="ti ti-file-type-pdf" style="font-size:48px;display:block;margin-bottom:12px;"></i>
+          PDF document — use the download button to view it.
+        </div>`;
+    }
+    document.getElementById("doc-modal").classList.remove("hidden");
+  }
+
+  function closeDocModal() { document.getElementById("doc-modal").classList.add("hidden"); }
+
+  function timeAgo(s) {
+    const d = (Date.now() - new Date(s)) / 1000;
+    if (d < 60)    return "just now";
+    if (d < 3600)  return `${Math.floor(d/60)}m ago`;
+    if (d < 86400) return `${Math.floor(d/3600)}h ago`;
+    return `${Math.floor(d/86400)}d ago`;
+  }
+
+  function showToast(msg, type="success") {
+    const map = { success:["ti-circle-check","toast-success"], error:["ti-alert-circle","toast-error"] };
+    const [icon, cls] = map[type] || map.info;
+    const t = document.createElement("div");
+    t.className = `toast ${cls}`;
+    t.innerHTML = `<i class="ti ${icon}"></i> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  loadAll();
+</script>
+</body>
+</html>

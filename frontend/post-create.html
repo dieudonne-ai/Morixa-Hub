@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morixa Hub — New Publication</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="api.js"></script>
+  <style>
+    .page-wrap { max-width: 740px; margin: 0 auto; padding: 28px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* Type selector */
+    .type-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+
+    .type-opt {
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.12s;
+      background: var(--surface-2);
+    }
+
+    .type-opt:hover { border-color: var(--border-3); background: var(--surface-3); }
+
+    .type-opt.sel {
+      border-color: var(--accent);
+      background: var(--surface-3);
+    }
+
+    .type-opt i { font-size: 20px; color: var(--text-2); display: block; margin-bottom: 6px; }
+    .type-opt.sel i { color: var(--text-1); }
+    .type-opt .type-name { font-size: 12px; font-weight: 600; color: var(--text-1); display: block; }
+    .type-opt .type-pts  { font-size: 11px; color: var(--text-3); font-family: var(--mono); display: block; margin-top: 2px; }
+
+    /* Char counter */
+    .field-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .char-count { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+
+    /* File attachments */
+    .drop-zone {
+      border: 1px dashed var(--border-3);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      color: var(--text-3);
+      font-size: 13px;
+      transition: all 0.12s;
+    }
+
+    .drop-zone:hover { border-color: var(--accent); background: var(--surface-2); color: var(--text-2); }
+    .drop-zone i { font-size: 26px; display: block; margin-bottom: 8px; }
+    .drop-zone input { display: none; }
+
+    .file-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+    .file-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-sm);
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--text-2);
+      font-family: var(--mono);
+    }
+
+    .file-pill i.icon { font-size: 13px; color: var(--text-3); }
+    .file-pill .rm { cursor: pointer; color: var(--text-3); font-size: 13px; transition: color 0.12s; }
+    .file-pill .rm:hover { color: var(--tag-cas-fg); }
+
+    /* Points preview */
+    .pts-preview {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--tag-art-bg);
+      color: var(--tag-art-fg);
+      border: 1px solid var(--tag-art-bdr);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      font-family: var(--mono);
+    }
+
+    .form-footer { display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding-top: 4px; }
+
+    /* Preview pane */
+    .preview-toggle {
+      display: flex;
+      gap: 0;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2px;
+      margin-bottom: 8px;
+    }
+
+    .ptab {
+      flex: 1;
+      text-align: center;
+      padding: 5px 12px;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-3);
+      transition: all 0.12s;
+    }
+
+    .ptab.active { background: var(--surface-3); color: var(--text-1); }
+
+    .preview-box {
+      min-height: 180px;
+      padding: 12px 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.75;
+      display: none;
+    }
+
+    .preview-box.active { display: block; }
+
+    /* Error */
+    .form-error {
+      background: var(--error-bg);
+      border: 1px solid var(--tag-cas-bdr);
+      color: var(--error-fg);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 13px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">
+    <div class="logo-box"><i class=""><img src="logo/logo.png" alt="" class="logo-box"></i></div>
+    Morixa Hub
+  </a>
+  <div class="nav-links">
+    <a href="/"><i class="ti ti-home"></i> Feed</a>
+    <a href="/repositories.html"><i class="ti ti-folder"></i> Repositories</a>
+    <a href="/chat.html"><i class="ti ti-message"></i> Messages</a>
+    <a href="/notifications.html"><i class="ti ti-bell"></i> Notifications</a>
+    <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+    <div class="page-title"><i class="ti ti-edit"></i> New publication</div>
+    <a href="/" class="btn"><i class="ti ti-x"></i> Cancel</a>
+  </div>
+
+  <!-- Error -->
+  <div class="form-error" id="form-error"><i class="ti ti-alert-circle"></i><span id="error-text"></span></div>
+
+  <!-- Type selector -->
+  <div class="card">
+    <div class="widget-title" style="margin-bottom:12px;"><i class="ti ti-layout-grid"></i> Publication type</div>
+    <div class="type-grid">
+      <div class="type-opt sel" onclick="selectType(this,'cas_clinique')">
+        <i class="ti ti-report-medical"></i>
+        <span class="type-name">Clinical case</span>
+        <span class="type-pts">+15 pts</span>
+      </div>
+      <div class="type-opt" onclick="selectType(this,'protocole')">
+        <i class="ti ti-clipboard-list"></i>
+        <span class="type-name">Protocol</span>
+        <span class="type-pts">+15 pts</span>
+      </div>
+      <div class="type-opt" onclick="selectType(this,'recherche')">
+        <i class="ti ti-microscope"></i>
+        <span class="type-name">Research</span>
+        <span class="type-pts">+25 pts</span>
+      </div>
+      <div class="type-opt" onclick="selectType(this,'article')">
+        <i class="ti ti-news"></i>
+        <span class="type-name">Article</span>
+        <span class="type-pts">+20 pts</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Details -->
+  <div class="card" style="display:flex;flex-direction:column;gap:14px;">
+    <div class="widget-title"><i class="ti ti-forms"></i> Details</div>
+
+    <div class="field-group">
+      <div class="field-header">
+        <label class="field-label" style="margin:0;">Title</label>
+        <span class="char-count" id="title-count">0 / 200</span>
+      </div>
+      <input class="field-input" type="text" id="post-title" maxlength="200"
+             placeholder="e.g. Atrial fibrillation in a 58-year-old — anticoagulation dilemma"
+             oninput="document.getElementById('title-count').textContent=this.value.length+' / 200'">
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Specialty</label>
+      <select class="field-input" id="post-specialty">
+        <option value="">Select a specialty (optional)...</option>
+        <option>Cardiology</option><option>Pediatrics</option>
+        <option>Neurology</option><option>Infectious Diseases</option>
+        <option>General Surgery</option><option>Gynecology & Obstetrics</option>
+        <option>Radiology</option><option>Internal Medicine</option>
+        <option>Psychiatry</option><option>Orthopedics</option>
+        <option>Emergency Medicine</option><option>Anesthesiology</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="field-group">
+      <div class="field-header">
+        <label class="field-label" style="margin:0;">Content</label>
+        <span class="char-count" id="body-count">0 chars</span>
+      </div>
+      <!-- Write / Preview toggle -->
+      <div class="preview-toggle">
+        <div class="ptab active" onclick="showWrite()">Write</div>
+        <div class="ptab" onclick="showPreview()">Preview</div>
+      </div>
+      <textarea class="field-input" id="post-body" style="min-height:220px;"
+        placeholder="Describe the case, protocol or study...&#10;&#10;Suggested structure:&#10;Background: patient history&#10;Findings: examination, investigations&#10;Management: treatment decisions&#10;Discussion: differential diagnosis&#10;Conclusion: key learning points"
+        oninput="updateBodyCount()"></textarea>
+      <div class="preview-box" id="body-preview"></div>
+    </div>
+  </div>
+
+  <!-- Attachments -->
+  <div class="card">
+    <div class="widget-title" style="margin-bottom:12px;">
+      <i class="ti ti-paperclip"></i> Attachments
+      <span style="font-weight:400;color:var(--text-3);font-size:11px;">(optional)</span>
+    </div>
+    <div class="drop-zone" onclick="document.getElementById('attach-input').click()"
+         ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+      <i class="ti ti-cloud-upload"></i>
+      Drag & drop files here, or <strong style="color:var(--text-1)">click to browse</strong>
+      <div style="margin-top:5px;font-size:11px;font-family:var(--mono);">PDF · DOCX · XLSX · ZIP · PNG · JPG · DICOM — max 50 MB each</div>
+      <input type="file" id="attach-input" multiple
+             accept=".pdf,.docx,.xlsx,.zip,.png,.jpg,.jpeg,.dicom"
+             onchange="addFiles(this.files)">
+    </div>
+    <div class="file-pills" id="file-pills"></div>
+  </div>
+
+  
+<div class="card" id="privacy-card" style="display:none; border-color: var(--tag-cas-bdr);">
+  <div class="widget-title" style="margin-bottom:10px; color:var(--tag-cas-fg);">
+    <i class="ti ti-shield-exclamation"></i> Potential patient identifiers detected
+  </div>
+  <div id="privacy-issues-list" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
+  <label style="display:flex; align-items:flex-start; gap:8px; font-size:12px; color:var(--text-2); cursor:pointer;">
+    <input type="checkbox" id="privacy-ack" style="margin-top:2px;">
+    I have reviewed this content and confirm all patient-identifying information has been removed or anonymized.
+  </label>
+</div>
+
+  <!-- Footer -->
+  <div class="form-footer">
+    <div class="pts-preview" id="pts-preview">
+      <i class="ti ti-trophy"></i> +15 pts on publish
+    </div>
+    <button class="btn btn-primary" id="submit-btn" onclick="submitPost()">
+      <i class="ti ti-send"></i> Publish
+      <div style="width:14px;height:14px;border:2px solid rgba(0,0,0,0.2);border-top-color:var(--bg);border-radius:50%;animation:spin 0.7s linear infinite;display:none;" id="submit-spinner"></div>
+    </button>
+  </div>
+
+</div>
+
+<style>
+  @keyframes spin { to { transform:rotate(360deg); } }
+</style>
+
+<script src="/api.js"></script>
+<script>
+  const PTS = { cas_clinique:15, protocole:15, recherche:25, article:20 };
+  const FILE_ICONS = { pdf:"ti-file-type-pdf", docx:"ti-file-type-doc", xlsx:"ti-table", zip:"ti-file-zip", png:"ti-photo", jpg:"ti-photo", jpeg:"ti-photo", dicom:"ti-scan" };
+
+  let currentType  = "cas_clinique";
+  let attachedFiles = [];
+  let privacyChecked   = false;
+  let privacyHasIssues = false;
+
+
+const PRIVACY_ICONS = {
+  email: "ti-mail", phone: "ti-phone", exact_date: "ti-calendar",
+  id_number: "ti-id", name: "ti-user", address: "ti-map-pin"
+};
+
+document.getElementById("post-title").addEventListener("input", resetPrivacyCheck);
+document.getElementById("post-body").addEventListener("input", resetPrivacyCheck);
+
+  function resetPrivacyCheck() {
+  privacyChecked   = false;
+  privacyHasIssues = false;
+  document.getElementById("privacy-card").style.display = "none";
+}
+
+async function checkPrivacy(title, body) {
+  try {
+    return await apiFetch("/privacy/check", {
+      method: "POST",
+      body: JSON.stringify({ title, body }),
+    });
+  } catch (e) {
+    // En cas d'échec du contrôle lui-même, on laisse passer plutôt que
+    // de bloquer la publication — le contrôle est une aide, pas un mur.
+    return { has_issues: false, issues: [] };
+  }
+}
+
+  function renderPrivacyIssues(issues) {
+  document.getElementById("privacy-issues-list").innerHTML = issues.map(i => `
+    <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--radius);">
+      <i class="ti ${PRIVACY_ICONS[i.type] || 'ti-alert-triangle'}" style="color:var(--tag-cas-fg);font-size:16px;margin-top:1px;"></i>
+      <div>
+        <div style="font-size:12px;color:var(--text-1);">${i.message}</div>
+        <div style="font-size:12px;font-family:var(--mono);color:var(--tag-cas-fg);margin-top:2px;">"${escapeHtmlPriv(i.text)}"</div>
+      </div>
+    </div>`).join("");
+  document.getElementById("privacy-card").style.display = "block";
+}
+
+  function escapeHtmlPriv(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+  function selectType(el, type) {
+    document.querySelectorAll(".type-opt").forEach(o => o.classList.remove("sel"));
+    el.classList.add("sel");
+    currentType = type;
+    document.getElementById("pts-preview").innerHTML =
+      `<i class="ti ti-trophy"></i> +${PTS[type]} pts on publish`;
+  }
+
+  function updateBodyCount() {
+    const len = document.getElementById("post-body").value.length;
+    document.getElementById("body-count").textContent = len.toLocaleString() + " chars";
+  }
+
+  function showWrite() {
+    document.querySelector(".ptab:first-child").classList.add("active");
+    document.querySelector(".ptab:last-child").classList.remove("active");
+    document.getElementById("post-body").style.display    = "block";
+    document.getElementById("body-preview").classList.remove("active");
+  }
+
+  function showPreview() {
+    document.querySelector(".ptab:first-child").classList.remove("active");
+    document.querySelector(".ptab:last-child").classList.add("active");
+    const raw = document.getElementById("post-body").value;
+    document.getElementById("body-preview").innerHTML =
+      raw ? raw.replace(/\n/g,"<br>") : `<span style="color:var(--text-3)">Nothing to preview yet.</span>`;
+    document.getElementById("post-body").style.display = "none";
+    document.getElementById("body-preview").classList.add("active");
+  }
+
+  function addFiles(list) {
+    Array.from(list).forEach(f => {
+      if (!attachedFiles.find(x => x.name===f.name)) attachedFiles.push(f);
+    });
+    renderPills();
+  }
+
+  function removeFile(name) {
+    attachedFiles = attachedFiles.filter(f => f.name!==name);
+    renderPills();
+  }
+
+  function renderPills() {
+    document.getElementById("file-pills").innerHTML = attachedFiles.map(f => {
+      const ext  = f.name.split(".").pop().toLowerCase();
+      const icon = FILE_ICONS[ext] || "ti-file";
+      const size = f.size>1048576 ? (f.size/1048576).toFixed(1)+" MB" : (f.size/1024).toFixed(0)+" KB";
+      return `
+        <div class="file-pill">
+          <i class="ti ${icon} icon"></i>
+          ${f.name} <span style="color:var(--text-3)">${size}</span>
+          <i class="ti ti-x rm" onclick="removeFile('${f.name}')"></i>
+        </div>`;
+    }).join("");
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    addFiles(e.dataTransfer.files);
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("form-error");
+    document.getElementById("error-text").textContent = msg;
+    el.style.display = "flex";
+    el.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+
+  function hideError() { document.getElementById("form-error").style.display = "none"; }
+
+
+// Remplacez ENTIÈREMENT submitPost() par cette version :
+async function submitPost() {
+  hideError();
+  const title     = document.getElementById("post-title").value.trim();
+  const body      = document.getElementById("post-body").value.trim();
+  const specialty = document.getElementById("post-specialty").value;
+
+  if (!title) return showError("Please enter a title.");
+  if (!body || body.length < 30) return showError("Content must be at least 30 characters.");
+
+  const ackBox = document.getElementById("privacy-ack");
+
+  // Étape 1 — lancer le contrôle si pas encore fait pour ce contenu
+  if (!privacyChecked) {
+    const result = await checkPrivacy(title, body);
+    privacyChecked   = true;
+    privacyHasIssues = result.has_issues;
+
+    if (result.has_issues) {
+      renderPrivacyIssues(result.issues);
+      document.getElementById("privacy-card").scrollIntoView({behavior:"smooth", block:"center"});
+      return; // on attend que le médecin relise et cliquer à nouveau sur Publish
+    } else {
+      document.getElementById("privacy-card").style.display = "none";
+    }
+  }
+
+  // Étape 2 — si des problèmes ont été détectés, exiger la confirmation
+  if (privacyHasIssues && !ackBox.checked) {
+    showError("Please confirm you've reviewed the flagged content before publishing.");
+    return;
+  }
+
+  // Étape 3 — publication normale (logique existante inchangée)
+  const btn     = document.getElementById("submit-btn");
+  const spinner = document.getElementById("submit-spinner");
+  btn.disabled  = true;
+  spinner.style.display = "block";
+
+  try {
+    const post = await apiFetch("/posts/", {
+      method: "POST",
+      body: JSON.stringify({ user_id:getUserId(), title, body, post_type:currentType, specialty }),
+    });
+
+    for (const f of attachedFiles) {
+      const fd = new FormData();
+      fd.append("file", f);
+      fd.append("user_id", getUserId());
+      fd.append("post_id", post.id);
+      await fetch("http://localhost:5000/api/files/upload", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${getToken()}` },
+        body: fd
+      });
+    }
+
+    const u = getUser();
+    u.total_points = (u.total_points || 0) + PTS[currentType];
+    localStorage.setItem("medhub_user", JSON.stringify(u));
+
+    window.location.href = `/post.html?id=${post.id}`;
+
+  } catch (e) {
+    showError(e.error || "Could not publish. Please try again.");
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = "none";
+  }
+}
+</script>
+</body>
+</html>

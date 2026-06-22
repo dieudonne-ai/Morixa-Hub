@@ -1,0 +1,13 @@
+.env
+
+__pycache__
+instance
+/uploads
+
+config.py
+medhub_schema_sql.sql
+/trash
+*.pyc
+*.pyo
+*.pyd
+

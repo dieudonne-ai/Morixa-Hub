@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morixa Hub — Sign in</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="api.js"></script>
+  <style>
+    body { min-height: 100vh; display: flex; }
+
+    /* Left branding panel */
+    .left-panel {
+      width: 420px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 56px 48px;
+    }
+
+    .left-panel .logo { margin-bottom: 52px; }
+
+    .left-panel h1 {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--text-1);
+      line-height: 1.35;
+      letter-spacing: -0.03em;
+      margin-bottom: 14px;
+    }
+
+    .left-panel p {
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.75;
+      margin-bottom: 40px;
+    }
+
+    .feature-list { display: flex; flex-direction: column; gap: 16px; }
+
+    .feature { display: flex; align-items: flex-start; gap: 12px; }
+
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .feature-icon i { color: var(--text-2); font-size: 16px; }
+    .feature-text { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+    .feature-text strong { color: var(--text-1); font-weight: 500; }
+
+    /* Right panel */
+    .right-panel {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      background: var(--bg);
+    }
+
+    .auth-box { width: 100%; max-width: 400px; }
+
+    .auth-box h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-1);
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    .subtitle { font-size: 13px; color: var(--text-2); margin-bottom: 24px; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 3px;
+      margin-bottom: 22px;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 7px;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-3);
+      transition: all 0.15s;
+    }
+
+    .tab.active {
+      background: var(--surface-3);
+      color: var(--text-1);
+    }
+
+    /* Form */
+    .form { display: flex; flex-direction: column; gap: 13px; }
+
+    .field-group { display: flex; flex-direction: column; gap: 5px; }
+
+    .forgot {
+      font-size: 12px;
+      color: var(--text-3);
+      cursor: pointer;
+      text-align: right;
+      margin-top: -6px;
+      transition: color 0.12s;
+    }
+    .forgot:hover { color: var(--text-1); }
+
+    .btn-full {
+      width: 100%;
+      justify-content: center;
+      padding: 9px;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    /* Messages */
+    .msg {
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 13px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid;
+      margin-bottom: 4px;
+    }
+
+    .msg-error   { background: var(--error-bg);   color: var(--error-fg);   border-color: var(--tag-cas-bdr); }
+    .msg-success { background: var(--success-bg); color: var(--success-fg); border-color: var(--tag-art-bdr); }
+
+    /* Spinner */
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-top-color: var(--bg);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Bottom note */
+    .auth-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-3);
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Left branding -->
+<div class="left-panel">
+  <div class="logo">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="logo-box"><i class=""><img src="logo/logo.png" alt="" class="logo-box"></i></div>
+      <span style="font-size:17px;font-weight:600;color:var(--text-1);letter-spacing:-0.02em;">Morixa Hub</span>
+    </div>
+  </div>
+
+  <h1>The professional network for physicians</h1>
+  <p>Share clinical cases, protocols and research with verified medical professionals across Africa and beyond.</p>
+
+  <div class="feature-list">
+    <div class="feature">
+      <div class="feature-icon"><i class="ti ti-folder"></i></div>
+      <div class="feature-text"><strong>Medical repositories</strong> — share and version your protocols like code</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon"><i class="ti ti-report-medical"></i></div>
+      <div class="feature-text"><strong>Clinical case discussions</strong> — get peer feedback from specialists</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon"><i class="ti ti-trophy"></i></div>
+      <div class="feature-text"><strong>Points & levels</strong> — build your medical reputation through contributions</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon"><i class="ti ti-shield-check"></i></div>
+      <div class="feature-text"><strong>Verified physicians only</strong> — a trusted, private environment</div>
+    </div>
+  </div>
+</div>
+
+<!-- Right auth panel -->
+<div class="right-panel">
+  <div class="auth-box">
+    <h2 id="auth-title">Welcome back</h2>
+    <p class="subtitle" id="auth-subtitle">Sign in to your Morixa Hub account</p>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('login')">Sign in</div>
+      <div class="tab" onclick="switchTab('register')">Create account</div>
+    </div>
+
+    <!-- Messages -->
+    <div class="msg msg-error" id="error-msg"><i class="ti ti-alert-circle"></i><span id="error-text"></span></div>
+    <div class="msg msg-success" id="success-msg"><i class="ti ti-circle-check"></i><span id="success-text"></span></div>
+
+    <!-- LOGIN -->
+    <div class="form" id="login-form">
+      <div class="field-group">
+        <label class="field-label">Email address</label>
+        <div class="field-wrap">
+          <i class="ti ti-mail"></i>
+          <input class="field-input" type="email" id="login-email" placeholder="doctor@hospital.org">
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <div class="field-wrap">
+          <i class="ti ti-lock"></i>
+          <input class="field-input" type="password" id="login-password" placeholder="••••••••">
+        </div>
+        <span class="forgot">Forgot password?</span>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">
+        <span>Sign in</span>
+        <div class="spinner" id="login-spinner"></div>
+      </button>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="form" id="register-form" style="display:none;">
+      <div class="row-2">
+        <div class="field-group">
+          <label class="field-label">First name</label>
+          <div class="field-wrap">
+            <i class="ti ti-user"></i>
+            <input class="field-input" type="text" id="reg-firstname" placeholder="John">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Last name</label>
+          <div class="field-wrap">
+            <i class="ti ti-user"></i>
+            <input class="field-input" type="text" id="reg-lastname" placeholder="Doe">
+          </div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Professional email</label>
+        <div class="field-wrap">
+          <i class="ti ti-mail"></i>
+          <input class="field-input" type="email" id="reg-email" placeholder="doctor@hospital.org">
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Specialty</label>
+        <div class="field-wrap">
+          <i class="ti ti-stethoscope"></i>
+          <select class="field-input" id="reg-specialty">
+            <option value="">Select your specialty...</option>
+            <option>Cardiology</option><option>Pediatrics</option>
+            <option>Neurology</option><option>Infectious Diseases</option>
+            <option>General Surgery</option><option>Gynecology & Obstetrics</option>
+            <option>Radiology</option><option>Internal Medicine</option>
+            <option>Psychiatry</option><option>Orthopedics</option>
+            <option>Emergency Medicine</option><option>Anesthesiology</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="field-group">
+          <label class="field-label">Hospital</label>
+          <div class="field-wrap">
+            <i class="ti ti-building-hospital"></i>
+            <input class="field-input" type="text" id="reg-hospital" placeholder="Mulago Hospital">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Country</label>
+          <div class="field-wrap">
+            <i class="ti ti-map-pin"></i>
+            <input class="field-input" type="text" id="reg-country" placeholder="Uganda">
+          </div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <div class="field-wrap">
+          <i class="ti ti-lock"></i>
+          <input class="field-input" type="password" id="reg-password" placeholder="Min. 8 characters">
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Confirm password</label>
+        <div class="field-wrap">
+          <i class="ti ti-lock-check"></i>
+          <input class="field-input" type="password" id="reg-confirm" placeholder="Repeat password">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doRegister()">
+        <span>Create account</span>
+        <div class="spinner" id="register-spinner"></div>
+      </button>
+    </div>
+
+    <p class="auth-note">
+      By signing in you agree to Morixa Hub's terms of use.<br>
+      For verified medical professionals only.
+    </p>
+  </div>
+</div>
+
+<script>
+  const API = "http://localhost:5000/api";
+
+  if (localStorage.getItem("medhub_token")) window.location.href = "/";
+
+  function switchTab(tab) {
+    hideMessages();
+    const isLogin = tab === "login";
+    document.getElementById("login-form").style.display    = isLogin ? "flex"  : "none";
+    document.getElementById("register-form").style.display = isLogin ? "none"  : "flex";
+    document.getElementById("auth-title").textContent      = isLogin ? "Welcome back" : "Join Morixa Hub";
+    document.getElementById("auth-subtitle").textContent   = isLogin
+      ? "Sign in to your Morixa Hub account"
+      : "Create your verified physician account";
+    document.querySelectorAll(".tab").forEach((t,i) => t.classList.toggle("active", isLogin ? i===0 : i===1));
+  }
+
+  function showError(msg)   { const e=document.getElementById("error-msg"); document.getElementById("error-text").textContent=msg; e.style.display="flex"; document.getElementById("success-msg").style.display="none"; }
+  function showSuccess(msg) { const e=document.getElementById("success-msg"); document.getElementById("success-text").textContent=msg; e.style.display="flex"; document.getElementById("error-msg").style.display="none"; }
+  function hideMessages()   { document.getElementById("error-msg").style.display="none"; document.getElementById("success-msg").style.display="none"; }
+  function setLoading(id, v){ document.getElementById(id).style.display = v ? "block" : "none"; }
+
+  async function doLogin() {
+    const email    = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
+    if (!email || !password) return showError("Please fill in all fields.");
+    setLoading("login-spinner", true);
+    try {
+      const res  = await fetch(`${API}/auth/login`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email,password}) });
+      const data = await res.json();
+      if (!res.ok) return showError(data.error || "Login failed.");
+      localStorage.setItem("medhub_token", data.token);
+      localStorage.setItem("medhub_user",  JSON.stringify(data.user));
+      showSuccess("Login successful — redirecting...");
+      setTimeout(() => window.location.href = "/", 900);
+    } catch(e) { showError("Server unreachable. Please try again."); }
+    finally    { setLoading("login-spinner", false); }
+  }
+
+  async function doRegister() {
+    const firstname = document.getElementById("reg-firstname").value.trim();
+    const lastname  = document.getElementById("reg-lastname").value.trim();
+    const email     = document.getElementById("reg-email").value.trim();
+    const specialty = document.getElementById("reg-specialty").value;
+    const hospital  = document.getElementById("reg-hospital").value.trim();
+    const country   = document.getElementById("reg-country").value.trim();
+    const password  = document.getElementById("reg-password").value;
+    const confirm   = document.getElementById("reg-confirm").value;
+
+    if (!firstname || !lastname || !email || !password) return showError("Please fill in all required fields.");
+    if (password.length < 8)    return showError("Password must be at least 8 characters.");
+    if (password !== confirm)   return showError("Passwords do not match.");
+
+    setLoading("register-spinner", true);
+    try {
+      const res  = await fetch(`${API}/auth/register`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({full_name:`${firstname} ${lastname}`,email,password,specialty,hospital,country}) });
+      const data = await res.json();
+      if (!res.ok) return showError(data.error || "Registration failed.");
+      showSuccess("Account created! You can now sign in.");
+      await fetch(`${API}/verification/check-email`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({user_id: data.user.id})
+        });
+      setTimeout(() => switchTab("login"), 1500);
+    } catch(e) { showError("Server unreachable. Please try again."); }
+    finally    { setLoading("register-spinner", false); }
+  }
+
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    document.getElementById("login-form").style.display !== "none" ? doLogin() : doRegister();
+  });
+</script>
+</body>
+</html>

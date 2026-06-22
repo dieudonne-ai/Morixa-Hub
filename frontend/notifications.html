@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morixa Hub — Notifications</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="api.js"></script>
+  <style>
+    .page-wrap  { max-width: 680px; margin: 0 auto; padding: 28px 20px; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+
+    .unread-badge {
+      background: var(--accent);
+      color: var(--bg);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      font-family: var(--mono);
+    }
+
+    /* Filter tabs */
+    .filter-tabs {
+      display: flex;
+      gap: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 3px;
+      margin-bottom: 18px;
+    }
+
+    .ftab {
+      flex: 1;
+      text-align: center;
+      padding: 7px 10px;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-3);
+      transition: all 0.12s;
+    }
+
+    .ftab.active { background: var(--surface-3); color: var(--text-1); }
+
+    /* Group label */
+    .group-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 8px;
+      font-family: var(--mono);
+    }
+
+    /* Notification card */
+    .notif-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .notif-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+      position: relative;
+    }
+
+    .notif-item:last-child { border-bottom: none; }
+    .notif-item:hover { background: var(--surface-2); }
+    .notif-item.unread { background: var(--surface-2); }
+    .notif-item.unread:hover { background: var(--surface-3); }
+
+    .unread-bar {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 2px;
+      background: var(--accent);
+    }
+
+    .notif-icon {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid var(--border-2);
+      background: var(--surface-3);
+    }
+
+    .notif-icon i { font-size: 16px; color: var(--text-2); }
+    .notif-icon.pts   i { color: var(--tag-art-fg); }
+    .notif-icon.like  i { color: var(--tag-cas-fg); }
+    .notif-icon.cmt   i { color: var(--tag-proto-fg); }
+    .notif-icon.follow i { color: var(--tag-res-fg); }
+
+    .notif-content { flex: 1; min-width: 0; }
+    .notif-text { font-size: 13px; color: var(--text-2); line-height: 1.55; }
+    .notif-text strong { font-weight: 600; color: var(--text-1); }
+    .notif-time { font-size: 11px; color: var(--text-3); margin-top: 4px; font-family: var(--mono); display: flex; align-items: center; gap: 4px; }
+
+    .notif-preview {
+      font-size: 12px;
+      color: var(--text-3);
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      margin-top: 6px;
+      font-style: italic;
+      border-left: 2px solid var(--border-3);
+    }
+
+    .notif-actions { display: flex; gap: 6px; margin-top: 8px; }
+
+    .pts-pill {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--tag-art-fg);
+      background: var(--tag-art-bg);
+      border: 1px solid var(--tag-art-bdr);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      font-family: var(--mono);
+      white-space: nowrap;
+    }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-3); }
+    .empty-state i { font-size: 44px; display: block; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">
+    <div class="logo-box"><i class=""><img src="logo/logo.png" alt="" class="logo-box"></i></div>
+    Morixa Hub
+  </a>
+  <div class="nav-links">
+    <a href="/"><i class="ti ti-home"></i> Feed</a>
+    <a href="/repositories.html"><i class="ti ti-folder"></i> Repositories</a>
+    <a href="/chat.html"><i class="ti ti-message"></i> Messages</a>
+    <a href="/notifications.html" class="active"><i class="ti ti-bell"></i> Notifications</a>
+    <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <div class="page-title">
+      <i class="ti ti-bell"></i> Notifications
+      <span class="unread-badge" id="unread-count">—</span>
+    </div>
+    <button class="btn" onclick="markAllRead()"><i class="ti ti-checks"></i> Mark all read</button>
+  </div>
+
+  <div class="filter-tabs">
+    <div class="ftab active" onclick="filterNotifs(this,'all')">All</div>
+    <div class="ftab" onclick="filterNotifs(this,'points')">Points</div>
+    <div class="ftab" onclick="filterNotifs(this,'like')">Likes</div>
+    <div class="ftab" onclick="filterNotifs(this,'comment')">Comments</div>
+    <div class="ftab" onclick="filterNotifs(this,'follow')">Follows</div>
+  </div>
+
+  <div id="notifs-container">
+    <div style="text-align:center;padding:40px;color:var(--text-3);">Loading...</div>
+  </div>
+</div>
+
+<script src="/api.js"></script>
+<script>
+  let NOTIFS = [];
+  let currentFilter = "all";
+
+  const ICON_MAP = {
+    points:  {cls:"pts",  icon:"ti-trophy"},
+    like:    {cls:"like", icon:"ti-heart"},
+    comment: {cls:"cmt",  icon:"ti-message-circle"},
+    follow:  {cls:"follow",icon:"ti-user-plus"},
+    file:    {cls:"pts",  icon:"ti-download"},
+  };
+
+  async function init() {
+    try {
+      NOTIFS = await apiFetch(`/users/${getUserId()}/notifications`);
+      renderNotifs(NOTIFS);
+    } catch(e) {
+      document.getElementById("notifs-container").innerHTML =
+        `<div class="empty-state"><i class="ti ti-wifi-off"></i><p>Could not load notifications.</p></div>`;
+    }
+  }
+
+  function renderNotifs(list) {
+    const unread = list.filter(n=>!n.is_read).length;
+    document.getElementById("unread-count").textContent = unread > 0 ? `${unread} unread` : "all read";
+
+    if (!list.length) {
+      document.getElementById("notifs-container").innerHTML =
+        `<div class="empty-state"><i class="ti ti-bell-off"></i><p>No notifications in this category.</p></div>`;
+      return;
+    }
+
+    // Group by date proximity (Today / Earlier)
+    const now   = Date.now();
+    const today = list.filter(n => (now - new Date(n.created_at)) < 86400000);
+    const older = list.filter(n => (now - new Date(n.created_at)) >= 86400000);
+
+    let html = "";
+    if (today.length)  html += renderGroup("Today",    today);
+    if (older.length)  html += renderGroup("Earlier",  older);
+    document.getElementById("notifs-container").innerHTML = html;
+  }
+
+  function renderGroup(label, items) {
+    return `<div class="group-label">${label}</div>
+    <div class="notif-card">
+      ${items.map(n => {
+        const m = ICON_MAP[n.type] || {cls:"", icon:"ti-bell"};
+        return `
+        <div class="notif-item ${n.is_read?'':'unread'}" id="notif-${n.id}" onclick="markRead(${n.id})">
+          ${n.is_read?'':'<div class="unread-bar"></div>'}
+          <div class="notif-icon ${m.cls}"><i class="ti ${m.icon}"></i></div>
+          <div class="notif-content">
+            <div class="notif-text">${n.message}</div>
+            <div class="notif-time"><i class="ti ti-clock" style="font-size:10px"></i> ${timeAgo(n.created_at)}</div>
+          </div>
+          ${n.type==='points'?`<span class="pts-pill">pts</span>`:''}
+        </div>`;
+      }).join("")}
+    </div>`;
+  }
+
+  async function markRead(id) {
+    const n = NOTIFS.find(x=>x.id===id);
+    if (!n || n.is_read) return;
+    try {
+      await apiFetch(`/users/notifications/${id}/read`, {method:"POST"});
+      n.is_read = true;
+      const el  = document.getElementById(`notif-${id}`);
+      if (el) {
+        el.classList.remove("unread");
+        const bar = el.querySelector(".unread-bar");
+        if (bar) bar.remove();
+      }
+      updateCount();
+    } catch(e) {}
+  }
+
+  async function markAllRead() {
+    for (const n of NOTIFS.filter(x=>!x.is_read)) {
+      try { await apiFetch(`/users/notifications/${n.id}/read`,{method:"POST"}); n.is_read=true; } catch(_) {}
+    }
+    renderNotifs(NOTIFS);
+  }
+
+  function filterNotifs(btn, type) {
+    document.querySelectorAll(".ftab").forEach(t=>t.classList.remove("active"));
+    btn.classList.add("active");
+    currentFilter = type;
+    const filtered = type==="all" ? NOTIFS : NOTIFS.filter(n=>n.type===type);
+    renderNotifs(filtered);
+  }
+
+  function updateCount() {
+    const u = NOTIFS.filter(n=>!n.is_read).length;
+    document.getElementById("unread-count").textContent = u>0?`${u} unread`:"all read";
+  }
+
+  function timeAgo(s) {
+    const d=(Date.now()-new Date(s))/1000;
+    if(d<60) return "just now";
+    if(d<3600) return `${Math.floor(d/60)}m ago`;
+    if(d<86400) return `${Math.floor(d/3600)}h ago`;
+    return `${Math.floor(d/86400)}d ago`;
+  }
+
+  init();
+</script>
+</body>
+</html>

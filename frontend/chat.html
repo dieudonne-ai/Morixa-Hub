@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morixa Hub — Messages</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+  <sript src="api.js"></script>
+  <style>
+    body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-layout { display: flex; flex: 1; overflow: hidden; }
+
+    /* Sidebar */
+    .chat-sidebar {
+      width: 280px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .sidebar-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+
+    .conv-list { flex: 1; overflow-y: auto; }
+
+    .conv-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+
+    .conv-item:hover  { background: var(--surface-2); }
+    .conv-item.active { background: var(--surface-3); }
+
+    .conv-meta { flex: 1; min-width: 0; }
+    .conv-name { font-size: 13px; font-weight: 500; color: var(--text-1); }
+    .conv-preview { font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    .conv-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+    .conv-time { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+    .unread-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+
+    /* Chat window */
+    .chat-window { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .chat-peer-name   { font-size: 14px; font-weight: 600; color: var(--text-1); letter-spacing: -0.01em; }
+    .chat-peer-status { font-size: 12px; color: var(--text-3); font-family: var(--mono); }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Empty state */
+    .chat-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-3);
+      gap: 10px;
+    }
+    .chat-empty i { font-size: 44px; }
+    .chat-empty p { font-size: 13px; }
+
+    /* Messages */
+    .msg-row { display: flex; gap: 8px; align-items: flex-end; }
+    .msg-row.mine { flex-direction: row-reverse; }
+
+    .bubble {
+      max-width: 62%;
+      padding: 9px 13px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+      border: 1px solid var(--border);
+    }
+
+    .bubble.theirs {
+      background: var(--surface);
+      border-color: var(--border);
+      border-bottom-left-radius: 3px;
+      color: var(--text-1);
+    }
+
+    .bubble.mine {
+      background: var(--surface-3);
+      border-color: var(--border-2);
+      border-bottom-right-radius: 3px;
+      color: var(--text-1);
+    }
+
+    .bubble-time {
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 3px;
+      font-family: var(--mono);
+    }
+
+    .mine .bubble-time { text-align: right; }
+
+    /* Day separator */
+    .day-sep {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--text-3);
+      font-family: var(--mono);
+      margin: 4px 0;
+    }
+    .day-sep::before, .day-sep::after { content:""; flex:1; height:1px; background:var(--border); }
+
+    /* Input bar */
+    .chat-input-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .chat-input-bar input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      font-size: 13px;
+      background: var(--surface-2);
+      color: var(--text-1);
+      outline: none;
+      font-family: var(--font);
+      transition: border-color 0.12s;
+    }
+
+    .chat-input-bar input:focus { border-color: var(--border-3); }
+    .chat-input-bar input::placeholder { color: var(--text-3); }
+
+    /* No conv selected */
+    .no-conv {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-3);
+      gap: 10px;
+    }
+    .no-conv i { font-size: 48px; }
+    .no-conv p { font-size: 13px; }
+
+  .chat-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius-lg);
+    min-width: 180px;
+    z-index: 50;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .chat-dropdown.hidden { display: none; }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: background 0.1s;
+    border-bottom: 1px solid var(--border);
+  }
+  .dropdown-item:last-child { border-bottom: none; }
+  .dropdown-item:hover { background: var(--surface-2); color: var(--text-1); }
+  .dropdown-item i { font-size: 16px; }
+
+  /* Message avec fichier joint */
+  .msg-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius);
+    font-size: 12px;
+    color: var(--text-2);
+    margin-top: 4px;
+    cursor: pointer;
+  }
+  .msg-file:hover { border-color: var(--border-3); }
+  .msg-file i { font-size: 18px; color: var(--text-3); }
+  .msg-file .file-meta { display: flex; flex-direction: column; gap: 1px; }
+  .msg-file .file-meta span:first-child { color: var(--text-1); font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">
+    <div class="logo-box"><i class=""><img src="logo/logo.png" alt="" class="logo-box"></i></div>
+    Morixa Hub
+  </a>
+  <div class="nav-links">
+    <a href="/"><i class="ti ti-home"></i> Feed</a>
+    <a href="/repositories.html"><i class="ti ti-folder"></i> Repositories</a>
+    <a href="/chat.html" class="active"><i class="ti ti-message"></i> Messages</a>
+    <a href="/notifications.html"><i class="ti ti-bell"></i> Notifications</a>
+    <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
+  </div>
+</nav>
+
+<div class="chat-layout">
+
+  <!-- Conversations sidebar -->
+  <aside class="chat-sidebar">
+    <div class="sidebar-header">
+      <h2>Messages</h2>
+      <div class="search-box">
+        <i class="ti ti-search"></i>
+        <input type="text" id="conv-search" placeholder="Search physicians..." oninput="filterConvs()">
+      </div>
+    </div>
+    <div class="conv-list" id="conv-list">
+      <div style="padding:20px;text-align:center;color:var(--text-3);font-size:13px;">Loading...</div>
+    </div>
+  </aside>
+
+  <!-- Chat window -->
+  <section class="chat-window" id="chat-window">
+    <div class="no-conv" id="no-conv">
+      <i class="ti ti-message-dots"></i>
+      <p>Select a conversation to start messaging</p>
+    </div>
+
+    <div id="active-chat" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+      
+<!-- 1. HEADER DU CHAT — remplacez entièrement le div.chat-header -->
+<div class="chat-header">
+
+  <!-- Avatar cliquable → profil -->
+  <div class="avatar" id="peer-avatar" style="cursor:pointer;"
+       onclick="goToPeerProfile()">?</div>
+
+  <!-- Nom cliquable → profil -->
+  <div>
+    <div class="chat-peer-name" id="peer-name" style="cursor:pointer;"
+         onclick="goToPeerProfile()">—</div>
+    <div class="chat-peer-status" id="peer-status">—</div>
+  </div>
+
+  <!-- Actions à droite -->
+  <div style="margin-left:auto; display:flex; gap:6px; position:relative;">
+    <button class="btn btn-primary btn-sm" onclick="goToPeerProfile()">
+      <i class="ti ti-user"></i> Profile
+    </button>
+
+    <!-- Bouton 3 points -->
+    <button class="btn btn-icon" id="menu-btn" onclick="toggleMenu(event)">
+      <i class="ti ti-dots-vertical"></i>
+    </button>
+
+    <!-- Dropdown menu -->
+    <div id="chat-menu" class="chat-dropdown hidden">
+      <div class="dropdown-item" onclick="goToPeerProfile()">
+        <i class="ti ti-user"></i> View profile
+      </div>
+      <div class="dropdown-item" onclick="clearConversation()">
+        <i class="ti ti-trash"></i> Clear conversation
+      </div>
+      <div class="dropdown-item" onclick="blockUser()">
+        <i class="ti ti-ban"></i> Block user
+      </div>
+    </div>
+  </div>
+</div>
+
+      <div class="chat-messages" id="chat-messages"></div>
+
+      
+<!-- 2. BARRE D'INPUT — remplacez entièrement le div.chat-input-bar -->
+<div class="chat-input-bar">
+
+  <!-- Bouton pièce jointe -->
+  <button class="btn btn-icon" title="Attach file" onclick="triggerAttach()">
+    <i class="ti ti-paperclip"></i>
+  </button>
+  <input type="file" id="attach-file-input" style="display:none;"
+         accept=".pdf,.docx,.xlsx,.png,.jpg,.jpeg,.zip"
+         onchange="sendAttachment(this)">
+
+  <input type="text" id="msg-input"
+         placeholder="Write a message..."
+         onkeydown="if(event.key==='Enter' && !event.shiftKey) sendMessage()">
+
+  <button class="btn btn-primary" onclick="sendMessage()">
+    <i class="ti ti-send"></i>
+  </button>
+</div>
+    </div>
+  </section>
+
+</div>
+
+<script src="/api.js"></script>
+<script>
+  const ME = getUser();
+  let conversations = [];
+  let activeConv    = null;
+  let pollTimer     = null;
+
+  async function init() {
+    try {
+      conversations = await apiFetch(`/messages/inbox/${getUserId()}`);
+      renderConvs(conversations);
+      
+const params = new URLSearchParams(window.location.search);
+const peerId = params.get("peer");
+if (peerId && parseInt(peerId) !== getUserId()) {
+  const existing = conversations.find(c => c.peer?.id === parseInt(peerId));
+  if (existing) {
+    openConv(parseInt(peerId));
+  } else {
+    const peer = await apiFetch(`/users/${peerId}`);
+    conversations.unshift({ peer, last_message: "", last_time: new Date().toISOString(), unread_count: 0 });
+    renderConvs(conversations);
+    openConv(parseInt(peerId));
+  }
+}
+    } catch(e) {
+      document.getElementById("conv-list").innerHTML =
+        `<div style="padding:20px;text-align:center;color:var(--text-3);font-size:13px;">Could not load messages.</div>`;
+    }
+  }
+
+  function renderConvs(list) {
+    if (!list.length) {
+      document.getElementById("conv-list").innerHTML =
+        `<div style="padding:20px;text-align:center;color:var(--text-3);font-size:13px;">No conversations yet.</div>`;
+      return;
+    }
+    document.getElementById("conv-list").innerHTML = list.map(c => {
+      const peer   = c.peer || {};
+      const initials = (peer.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2);
+      return `
+        <div class="conv-item ${activeConv?.peer?.id===peer.id?'active':''}"
+             onclick="openConv(${peer.id})" id="conv-${peer.id}">
+          <div class="avatar">${initials}</div>
+          <div class="conv-meta">
+            <div class="conv-name">Dr. ${peer.full_name||"Unknown"}</div>
+            <div class="conv-preview">${c.last_message||""}</div>
+          </div>
+          <div class="conv-right">
+            <span class="conv-time">${timeAgo(c.last_time)}</span>
+            ${c.unread_count>0?`<div class="unread-dot"></div>`:""}
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  function filterConvs() {
+    const q = document.getElementById("conv-search").value.toLowerCase();
+    renderConvs(conversations.filter(c => (c.peer?.full_name||"").toLowerCase().includes(q)));
+  }
+
+  async function openConv(peerId) {
+    const conv = conversations.find(c => c.peer?.id === peerId);
+    if (!conv) return;
+    activeConv = conv;
+
+    // Update sidebar active state
+    document.querySelectorAll(".conv-item").forEach(el => el.classList.remove("active"));
+    const item = document.getElementById(`conv-${peerId}`);
+    if (item) { item.classList.add("active"); item.querySelector(".unread-dot")?.remove(); }
+
+    // Show chat header
+    const peer     = conv.peer;
+    const initials = (peer.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2);
+    document.getElementById("peer-avatar").textContent  = initials;
+    document.getElementById("peer-name").textContent    = "Dr. " + (peer.full_name||"Unknown");
+    document.getElementById("peer-status").textContent  = peer.specialty ? `${peer.specialty}` : "Physician";
+    document.getElementById("no-conv").style.display    = "none";
+    document.getElementById("active-chat").style.display = "flex";
+
+    await loadMessages(peerId);
+
+    // Start polling every 5s
+    clearInterval(pollTimer);
+    pollTimer = setInterval(() => loadMessages(peerId), 5000);
+  }
+
+  async function loadMessages(peerId) {
+    try {
+      const msgs = await apiFetch(`/messages/conversation/${getUserId()}/${peerId}`);
+      const container = document.getElementById("chat-messages");
+      const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 60;
+
+      container.innerHTML = renderMessages(msgs);
+
+      if (wasAtBottom) container.scrollTop = container.scrollHeight;
+    } catch(e) {}
+  }
+
+  function renderMessages(msgs) {
+    if (!msgs.length) return `<div class="chat-empty"><i class="ti ti-message-2"></i><p>No messages yet. Say hello!</p></div>`;
+
+    let html = "";
+    let lastDate = "";
+
+    msgs.forEach(m => {
+      const d = new Date(m.created_at).toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"});
+      if (d !== lastDate) {
+        html += `<div class="day-sep">${d}</div>`;
+        lastDate = d;
+      }
+      const mine = m.sender_id === getUserId();
+      const t    = new Date(m.created_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+      html += `
+        <div class="msg-row ${mine?'mine':''}">
+          ${!mine?`<div class="avatar" style="width:26px;height:26px;font-size:10px;">${(activeConv?.peer?.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2)}</div>`:""}
+          <div>
+            <div class="bubble ${mine?'mine':'theirs'}">${escapeHtml(m.body)}</div>
+            <div class="bubble-time">${t}</div>
+          </div>
+        </div>`;
+    });
+    return html;
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById("msg-input");
+    const body  = input.value.trim();
+    if (!body || !activeConv) return;
+    input.value = "";
+    try {
+      await apiFetch("/messages/",{method:"POST",body:JSON.stringify({
+        sender_id:getUserId(), receiver_id:activeConv.peer.id, body
+      })});
+      await loadMessages(activeConv.peer.id);
+      // Update preview in sidebar
+      const c = conversations.find(x=>x.peer?.id===activeConv.peer.id);
+      if (c) { c.last_message=body; c.last_time=new Date().toISOString(); }
+      renderConvs(conversations);
+    } catch(e) {}
+  }
+
+  function viewPeerProfile() {
+    if (activeConv?.peer?.id) window.location.href=`/profile.html?id=${activeConv.peer.id}`;
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");
+  }
+
+  function timeAgo(s) {
+    if (!s) return "";
+    const d=(Date.now()-new Date(s))/1000;
+    if(d<60) return "now";
+    if(d<3600) return `${Math.floor(d/60)}m`;
+    if(d<86400) return `${Math.floor(d/3600)}h`;
+    return new Date(s).toLocaleDateString([],{month:"short",day:"numeric"});
+  }
+
+
+  
+/* ── Navigation profil ─────────────────────────────────── */
+function goToPeerProfile() {
+  if (activeConv?.peer?.id) {
+    window.location.href = `/profile.html?id=${activeConv.peer.id}`;
+  }
+}
+
+/* ── Menu 3 points ─────────────────────────────────────── */
+function toggleMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById("chat-menu");
+  menu.classList.toggle("hidden");
+}
+
+// Fermer le menu si on clique ailleurs
+document.addEventListener("click", () => {
+  document.getElementById("chat-menu")?.classList.add("hidden");
+});
+
+function clearConversation() {
+  document.getElementById("chat-menu").classList.add("hidden");
+  if (!activeConv) return;
+  if (!confirm("Clear this conversation? Messages will only be removed from your view.")) return;
+  document.getElementById("chat-messages").innerHTML =
+    `<div class="chat-empty"><i class="ti ti-message-2"></i><p>Conversation cleared.</p></div>`;
+}
+
+function blockUser() {
+  document.getElementById("chat-menu").classList.add("hidden");
+  showToast("Block feature coming soon.", "info");
+}
+
+/* ── Pièces jointes ─────────────────────────────────────── */
+function triggerAttach() {
+  document.getElementById("attach-file-input").click();
+}
+
+async function sendAttachment(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  // Afficher un message optimiste immédiatement
+  const tempId = Date.now();
+  appendLocalMessage({
+    from: getUserId(),
+    body: `__FILE__:${file.name}:${file.size}`,
+    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    tempId,
+  });
+
+  try {
+    // 1. Uploader le fichier
+    const fd = new FormData();
+    fd.append("file",    file);
+    fd.append("user_id", getUserId());
+    const uploadRes = await fetch("http://localhost:5000/api/files/upload", {
+      method:  "POST",
+      headers: { "Authorization": `Bearer ${getToken()}` },
+      body:    fd,
+    });
+    const uploaded = await uploadRes.json();
+
+    // 2. Envoyer un message texte avec référence au fichier
+    const body = `📎 ${file.name} [file_id:${uploaded.file_id}]`;
+    await apiFetch("/messages/", {
+      method: "POST",
+      body:   JSON.stringify({
+        sender_id:   getUserId(),
+        receiver_id: activeConv.peer.id,
+        body,
+      }),
+    });
+
+    showToast("File sent successfully", "success");
+  } catch(e) {
+    showToast("Could not send file.", "error");
+  }
+
+  // Réinitialiser l'input
+  input.value = "";
+}
+
+/* ── Mise à jour de renderMessages() ─────────────────────
+   Ajoutez cette fonction pour détecter les messages avec fichier
+   et afficher une bulle spéciale. Remplacez le renderMessages()
+   existant par celui-ci : */
+
+function renderMessages(msgs) {
+  if (!msgs.length) {
+    return `<div class="chat-empty"><i class="ti ti-message-2"></i><p>No messages yet. Say hello!</p></div>`;
+  }
+
+  let html = "";
+  let lastDate = "";
+
+  msgs.forEach(m => {
+    const d = new Date(m.created_at).toLocaleDateString("en-US", {
+      weekday: "long", month: "short", day: "numeric"
+    });
+    if (d !== lastDate) {
+      html += `<div class="day-sep">${d}</div>`;
+      lastDate = d;
+    }
+
+    const mine = m.sender_id === getUserId();
+    const t    = new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const ini  = (activeConv?.peer?.full_name || "?").split(" ").map(x => x[0]).join("").toUpperCase().slice(0, 2);
+
+    // Détecter les messages avec fichier joint
+    const fileMatch = m.body.match(/📎 (.+) \[file_id:(\d+)\]/);
+
+    html += `
+      <div class="msg-row ${mine ? "mine" : ""}">
+        ${!mine ? `<div class="avatar" style="width:26px;height:26px;font-size:10px;cursor:pointer;"
+                        onclick="goToPeerProfile()">${ini}</div>` : ""}
+        <div>
+          ${fileMatch ? `
+            <div class="bubble ${mine ? "mine" : "theirs"}" style="padding:6px 10px;">
+              <div class="msg-file" onclick="downloadFile(${fileMatch[2]}, '${escapeHtml(fileMatch[1])}')">
+                <i class="ti ti-file"></i>
+                <div class="file-meta">
+                  <span>${escapeHtml(fileMatch[1])}</span>
+                  <span style="font-size:11px;color:var(--text-3);">Click to download</span>
+                </div>
+                <i class="ti ti-download" style="margin-left:auto;font-size:14px;"></i>
+              </div>
+            </div>` : `
+            <div class="bubble ${mine ? "mine" : "theirs"}">${escapeHtml(m.body)}</div>`}
+          <div class="bubble-time">${t}</div>
+        </div>
+      </div>`;
+  });
+
+  return html;
+}
+
+/* ── Helper pour ajouter un message local immédiatement ── */
+function appendLocalMessage({ from, body, time, tempId }) {
+  const container = document.getElementById("chat-messages");
+  const mine = from === getUserId();
+  const fileMatch = body.match(/__FILE__:(.+):(\d+)/);
+  const div = document.createElement("div");
+  div.className = `msg-row ${mine ? "mine" : ""}`;
+  div.id = `temp-${tempId}`;
+  div.innerHTML = `
+    <div>
+      ${fileMatch ? `
+        <div class="bubble ${mine ? "mine" : "theirs"}" style="padding:6px 10px;">
+          <div class="msg-file">
+            <i class="ti ti-file"></i>
+            <div class="file-meta">
+              <span>${escapeHtml(fileMatch[1])}</span>
+              <span style="font-size:11px;color:var(--text-3);">Uploading...</span>
+            </div>
+          </div>
+        </div>` : `
+        <div class="bubble ${mine ? "mine" : "theirs"}">${escapeHtml(body)}</div>`}
+      <div class="bubble-time">${time}</div>
+    </div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+  init();
+
+  
+</script>
+</body>
+</html>

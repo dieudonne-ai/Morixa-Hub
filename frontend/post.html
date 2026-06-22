@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morixa Hub — Post</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="api.js"></script>
+  <style>
+    .page-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Post body */
+    .post-title-lg {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-1);
+      line-height: 1.35;
+      letter-spacing: -0.03em;
+      margin-bottom: 14px;
+    }
+
+    .post-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .author-block { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .author-name  { font-size: 14px; font-weight: 600; color: var(--text-1); }
+    .author-sub   { font-size: 12px; color: var(--text-3); font-family: var(--mono); }
+
+    .post-body-text {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.85;
+      white-space: pre-wrap;
+    }
+
+    /* Action bar */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin-top: 20px;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      color: var(--text-2);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      transition: all 0.12s;
+      font-family: var(--font);
+    }
+
+    .action-btn:hover { background: var(--surface-2); color: var(--text-1); }
+    .action-btn.liked { color: var(--tag-cas-fg); }
+    .action-btn i { font-size: 17px; }
+    .views-count { margin-left: auto; font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 4px; font-family: var(--mono); }
+
+    /* Files section */
+    .files-section { display: flex; flex-direction: column; gap: 6px; }
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: border-color 0.12s;
+    }
+    .file-row:hover { border-color: var(--border-2); }
+    .file-icon-w { width: 30px; height: 30px; border-radius: var(--radius-sm); background: var(--surface-3); border: 1px solid var(--border-2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .file-icon-w i { font-size: 15px; color: var(--text-2); }
+    .file-info { flex: 1; min-width: 0; }
+    .file-info-name { font-size: 13px; color: var(--text-1); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-info-size { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+
+    /* Comments */
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .comment-item { display: flex; gap: 10px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .comment-item:last-child { border-bottom: none; }
+    .comment-right { flex: 1; }
+    .comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .comment-author { font-size: 13px; font-weight: 600; color: var(--text-1); }
+    .comment-time   { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+    .comment-body   { font-size: 13px; color: var(--text-2); line-height: 1.7; }
+
+    .comment-form { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .comment-footer { display: flex; justify-content: space-between; align-items: center; }
+    .comment-footer-note { font-size: 11px; color: var(--text-3); }
+
+    /* Sidebar */
+    .layout { display: grid; grid-template-columns: 1fr 220px; gap: 18px; align-items: start; }
+    .sidebar-sticky { position: sticky; top: 72px; display: flex; flex-direction: column; gap: 12px; }
+
+    .related-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .related-item:last-child { border-bottom: none; }
+    .related-item:hover .related-title { color: var(--accent-dim); }
+    .related-title { font-size: 12px; font-weight: 500; color: var(--text-1); margin-bottom: 4px; transition: color 0.12s; }
+    .related-meta  { font-size: 11px; color: var(--text-3); display: flex; gap: 8px; font-family: var(--mono); }
+
+    /* Loading */
+    .skeleton-post { display: flex; flex-direction: column; gap: 12px; }
+
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar-sticky { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">
+    <div class="logo-box"><i class=""><img src="logo/logo.png" alt="" class="logo-box"></i></div>
+    Morixa Hub
+  </a>
+  <div class="nav-links">
+    <a href="/"><i class="ti ti-home"></i> Feed</a>
+    <a href="/repositories.html"><i class="ti ti-folder"></i> Repositories</a>
+    <a href="/chat.html"><i class="ti ti-message"></i> Messages</a>
+    <a href="/notifications.html"><i class="ti ti-bell"></i> Notifications</a>
+    <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- Breadcrumb -->
+  <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3);">
+    <a href="/" style="color:var(--text-3);display:flex;align-items:center;gap:4px;" class="btn btn-ghost btn-sm">
+      <i class="ti ti-arrow-left"></i> Back to feed
+    </a>
+  </div>
+
+  <!-- Main layout -->
+  <div class="layout" id="main-layout">
+    <!-- Skeleton while loading -->
+    <div class="skeleton-post card" id="skeleton">
+      <div class="skeleton" style="height:28px;width:80%;"></div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div class="skeleton" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+          <div class="skeleton" style="height:12px;width:35%;"></div>
+          <div class="skeleton" style="height:10px;width:22%;"></div>
+        </div>
+      </div>
+      <div class="skeleton" style="height:200px;"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/api.js"></script>
+<script>
+  const FILE_ICONS = { pdf:"ti-file-type-pdf", docx:"ti-file-type-doc", xlsx:"ti-table", zip:"ti-file-zip", png:"ti-photo", jpg:"ti-photo", jpeg:"ti-photo", dicom:"ti-scan" };
+  const TYPE_LABELS = { cas_clinique:"Clinical case", protocole:"Protocol", recherche:"Research", article:"Article" };
+  const TYPE_TAGS   = { cas_clinique:"tag-cas", protocole:"tag-protocole", recherche:"tag-recherche", article:"tag-article" };
+
+  let postId  = null;
+  let post    = null;
+  let liked   = false;
+
+  async function init() {
+    const params = new URLSearchParams(window.location.search);
+    postId = params.get("id");
+    if (!postId) { window.location.href="/"; return; }
+
+    try {
+      post = await apiFetch(`/posts/${postId}`);
+      document.title = `Morixa Hub — ${post.title}`;
+      renderPost(post);
+      await Promise.all([loadComments(), loadRelated(post.post_type, post.specialty)]);
+    } catch(e) {
+      document.getElementById("main-layout").innerHTML =
+        `<div class="card" style="text-align:center;padding:48px;color:var(--text-3);">
+          <i class="ti ti-file-off" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+          Post not found or could not be loaded.
+        </div>`;
+    }
+  }
+
+  function renderPost(p) {
+    const author   = p.author || {};
+    const initials = (author.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2);
+    const typeLabel = TYPE_LABELS[p.post_type] || p.post_type;
+    const typeTag   = TYPE_TAGS[p.post_type] || "tag-neutral";
+
+    document.getElementById("main-layout").innerHTML = `
+      <!-- Post content -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <div class="card">
+          <!-- Tags row -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+            <span class="tag ${typeTag}">${typeLabel}</span>
+            ${author.specialty?`<span class="tag tag-neutral">${author.specialty}</span>`:""}
+          </div>
+
+          <div class="post-title-lg">${escapeHtml(p.title)}</div>
+          
+          <div class="post-meta-row">
+            <div class="author-block">
+              <div class="avatar">${initials}</div
+                <div>
+                  <div class="author-name">Dr. ${escapeHtml(author.full_name||"Unknown")}</div>
+                  ${author.verif_level && author.verif_level !== "none" ? renderVerifBadge(author.verif_level) : ""}
+                  <div class="author-sub">${author.hospital||""} · ${timeAgo(p.created_at)}</div>
+                  </div>
+                  </div>
+                  ${author.id !== getUserId() ? `
+                  <button class="btn btn-sm" onclick="messageAuthor(${author.id})">
+                    <i class="ti ti-message"></i> Message
+                    </button>` : ""}
+                </div>
+
+          <div class="post-body-text">${escapeHtml(p.body)}</div>
+
+          <div class="action-bar">
+            <button class="action-btn ${liked?'liked':''}" id="like-btn" onclick="likePost()">
+              <i class="ti ${liked?'ti-heart-filled':'ti-heart'}"></i>
+              <span id="like-count">${p.likes||0}</span>
+            </button>
+            <button class="action-btn" onclick="document.getElementById('comment-input').focus()">
+              <i class="ti ti-message-circle"></i>
+              <span id="comment-count">${p.comments_count||0}</span>
+            </button>
+            <button class="action-btn" onclick="sharePost()">
+              <i class="ti ti-share"></i> Share
+            </button>
+            <span class="views-count"><i class="ti ti-eye"></i> ${(p.views||0).toLocaleString()}</span>
+          </div>
+        </div>
+
+        <!-- Files -->
+${p.files?.length ? `
+<div class="card">
+  <div class="section-title"><i class="ti ti-paperclip"></i> Attachments (${p.files.length})</div>
+  <div class="files-section">
+    ${p.files.map(f => {
+      const ext  = (f.file_type||f.file_name?.split(".").pop()||"").toLowerCase();
+      const icon = FILE_ICONS[ext]||"ti-file";
+      const size = f.file_size ? (f.file_size>1048576?(f.file_size/1048576).toFixed(1)+" MB":(f.file_size/1024).toFixed(0)+" KB") : "—";
+      return `
+        <div class="file-row">
+          <div class="file-icon-w"><i class="ti ${icon}"></i></div>
+          <div class="file-info">
+            <div class="file-info-name">${escapeHtml(f.file_name)}</div>
+            <div class="file-info-size">${ext.toUpperCase()} · ${size}</div>
+          </div>
+          <button class="btn btn-sm" onclick="downloadFile(${f.id}, '${escapeHtml(f.file_name)}')">
+            <i class="ti ti-download"></i> Download
+          </button>
+        </div>`;
+    }).join("")}
+  </div>
+</div>` : ""}
+
+        <!-- Comments -->
+        <div class="card">
+          <div class="section-title"><i class="ti ti-messages"></i> Comments <span id="cmt-title-count" style="font-weight:400;"></span></div>
+          <div id="comments-list"></div>
+          <div class="comment-form">
+            <div style="display:flex;gap:10px;">
+              <div class="avatar" style="flex-shrink:0;">${(getUser().full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2)}</div>
+              <textarea class="field-input" id="comment-input" placeholder="Write a comment..." style="min-height:90px;"></textarea>
+            </div>
+            <div class="comment-footer">
+              <span class="comment-footer-note">+5 pts for each comment</span>
+              <button class="btn btn-primary" onclick="submitComment()">
+                <i class="ti ti-send"></i> Post comment
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right sidebar -->
+      <div class="sidebar-sticky">
+        
+      
+      
+        <div class="widget">
+  <div class="widget-title"><i class="ti ti-user"></i> About the author</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+    <div class="avatar">${initials}</div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-1);">Dr. ${escapeHtml(author.full_name||"?")}</div>
+      <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);">${author.specialty||""}</div>
+    </div>
+  </div>
+  <div style="font-size:12px;color:var(--text-3);font-family:var(--mono);">${author.hospital||""}</div>
+  ${author.id !== getUserId() ? `
+  <div style="display:flex;gap:6px;margin-top:12px;">
+    <button class="btn btn-sm" style="flex:1;justify-content:center;" onclick="messageAuthor(${author.id})">
+      <i class="ti ti-message"></i> Message
+    </button>
+  </div>` : ""}
+</div>
+
+        <div class="widget">
+          <div class="widget-title"><i class="ti ti-files"></i> Related posts</div>
+          <div id="related-posts"><div style="color:var(--text-3);font-size:12px;">Loading...</div></div>
+        </div>
+      </div>`;
+  }
+
+  async function loadComments() {
+    try {
+      const data = await apiFetch(`/posts/${postId}/comments`);
+      document.getElementById("cmt-title-count").textContent = `(${data.length})`;
+      document.getElementById("comment-count").textContent   = data.length;
+      if (!data.length) {
+        document.getElementById("comments-list").innerHTML =
+          `<div style="color:var(--text-3);font-size:13px;padding:8px 0;">No comments yet — be the first.</div>`;
+        return;
+      }
+      document.getElementById("comments-list").innerHTML = data.map(c => {
+        const ini = (c.author?.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2);
+        return `
+          <div class="comment-item">
+            <div class="avatar">${ini}</div>
+            <div class="comment-right">
+              <div class="comment-header">
+                <span class="comment-author">Dr. ${escapeHtml(c.author?.full_name||"Unknown")}</span>
+                <span class="comment-time">${timeAgo(c.created_at)}</span>
+              </div>
+              <div class="comment-body">${escapeHtml(c.body)}</div>
+            </div>
+          </div>`;
+      }).join("");
+    } catch(e) {}
+  }
+  
+async function submitComment() {
+  const input = document.getElementById("comment-input");
+  if (!input) return;
+  const body = input.value.trim();
+  if (!body) {
+    input.style.borderColor = "var(--tag-cas-bdr)";
+    setTimeout(() => input.style.borderColor = "", 1000);
+    return;
+  }
+  const btn = document.querySelector('[onclick="submitComment()"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Posting...'; }
+  try {
+    await apiFetch(`/posts/${postId}/comment`, {
+      method: "POST",
+      body:   JSON.stringify({ user_id: getUserId(), body }),
+    });
+    input.value = "";
+    await loadComments();
+    const u = getUser();
+    u.total_points = (u.total_points || 0) + 5;
+    localStorage.setItem("medhub_user", JSON.stringify(u));
+    showToast("+5 pts earned for your comment", "success");
+  } catch(e) {
+    showToast(e.error || "Could not post comment.", "error");
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-send"></i> Post comment'; }
+  }
+}
+
+  async function likePost() {
+    if (liked) return;
+    try {
+      const data = await apiFetch(`/posts/${postId}/like`,{
+        method:"POST", body:JSON.stringify({user_id:getUserId()})
+      });
+      liked = true;
+      document.getElementById("like-count").textContent = data.likes;
+      const btn = document.getElementById("like-btn");
+      btn.classList.add("liked");
+      btn.querySelector("i").className = "ti ti-heart-filled";
+      showToast("Post liked!", "success");
+    } catch(e) { showToast(e.error||"Could not like.", "error"); }
+  }
+
+  function sharePost() {
+    navigator.clipboard?.writeText(window.location.href);
+    showToast("Link copied to clipboard", "info");
+  }
+
+  function messageAuthor(uid) {
+  if (!uid || uid === getUserId()) return;   // sécurité supplémentaire
+  window.location.href = `/chat.html?peer=${uid}`;
+}
+
+  async function loadRelated(type, specialty) {
+    try {
+      const data = await apiFetch(`/posts/?type=${type}&per_page=4`);
+      const related = (data.posts||[]).filter(p=>p.id!==parseInt(postId)).slice(0,3);
+      if (!related.length) {
+        document.getElementById("related-posts").innerHTML =
+          `<div style="color:var(--text-3);font-size:12px;">No related posts found.</div>`;
+        return;
+      }
+      document.getElementById("related-posts").innerHTML = related.map(p=>`
+        <div class="related-item" onclick="window.location='/post.html?id=${p.id}'">
+          <div class="related-title">${escapeHtml(p.title)}</div>
+          <div class="related-meta">
+            <span><i class="ti ti-heart" style="font-size:11px"></i> ${p.likes||0}</span>
+            <span>${timeAgo(p.created_at)}</span>
+          </div>
+        </div>`).join("");
+    } catch(e) {
+      document.getElementById("related-posts").innerHTML =
+        `<div style="color:var(--text-3);font-size:12px;">Unavailable.</div>`;
+    }
+  }
+
+  function escapeHtml(s) {
+    if (!s) return "";
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function timeAgo(s) {
+    if (!s) return "";
+    const d=(Date.now()-new Date(s))/1000;
+    if(d<60) return "just now";
+    if(d<3600) return `${Math.floor(d/60)}m ago`;
+    if(d<86400) return `${Math.floor(d/3600)}h ago`;
+    return `${Math.floor(d/86400)}d ago`;
+  }
+
+  function showToast(msg, type="success") {
+    const map={success:["ti-circle-check","toast-success"],error:["ti-alert-circle","toast-error"],info:["ti-info-circle","toast-info"]};
+    const [icon,cls]=map[type]||map.info;
+    const t=document.createElement("div");
+    t.className=`toast ${cls}`;
+    t.innerHTML=`<i class="ti ${icon}"></i> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),3500);
+  }
+
+async function downloadFile(fileId, fileName) {
+  try {
+    const res = await fetch(`http://localhost:5000/api/files/download/${fileId}`, {
+      headers: { "Authorization": `Bearer ${getToken()}` }
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Download failed" }));
+      return showToast(err.error || "Download failed", "error");
+    }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url; a.download = fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    showToast("Could not download file.", "error");
+  }
+}
+
+  init();
+</script>
+</body>
+</html>

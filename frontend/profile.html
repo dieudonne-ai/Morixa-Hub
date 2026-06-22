@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morixa Hub — Profile</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="api.js"></script>
+  <style>
+    .cover {
+      height: 160px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Subtle grid pattern like Palantir */
+    .cover::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: 0.5;
+    }
+
+    .profile-header {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+    }
+
+    .avatar-wrap { position: absolute; top: -48px; left: 24px; }
+
+    .avatar-lg {
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      border: 2px solid var(--border-2);
+      background: var(--surface-2);
+      color: var(--text-1);
+      font-size: 28px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+    }
+
+    .profile-actions {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 12px;
+      gap: 8px;
+    }
+
+    .page-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 18px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .profile-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-1);
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+      margin-top: 56px;
+    }
+
+    .profile-title { font-size: 13px; color: var(--text-2); margin-bottom{ display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+
+    .profile-bio { font-size: 13px; color: var(--text-2); line-height: 1.75; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+
+    .stat-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-1);
+      font-family: var(--mono);
+      letter-spacing: -0.03em;
+    }
+
+    .stat-label { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+
+    .level-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .level-icon {
+      width: 36px; height: 36px;
+      border-radius: var(--radius);
+      background: var(--surface-3);
+      border: 1px solid var(--border-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .level-icon i { color: var(--text-1); font-size: 18px; }
+    .level-name { font-size: 14px; font-weight: 600; color: var(--text-1); }
+    .level-sub  { font-size: 12px; color: var(--text-3); font-family: var(--mono); }
+
+    .pts-log-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .pts-log-item:last-child { border-bottom: none; }
+    .pts-action { flex: 1; font-size: 12px; color: var(--text-2); }
+    .pts-val { font-size: 12px; font-weight: 600; color: var(--tag-art-fg); font-family: var(--mono); }
+
+    .post-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .post-item:last-child { border-bottom: none; }
+    .post-item:hover .post-item-title { color: var(--accent-dim); }
+
+    .post-type-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+    .dot-cas      { background: var(--tag-cas-fg); }
+    .dot-proto    { background: var(--tag-proto-fg); }
+    .dot-recherche{ background: var(--tag-res-fg); }
+    .dot-article  { background: var(--tag-art-fg); }
+
+    .post-item-title { font-size: 13px; font-weight: 500; color: var(--text-1); margin-bottom: 4px; transition: color 0.12s; }
+    .post-item-meta  { font-size: 11px; color: var(--text-3); display: flex; gap: 10px; font-family: var(--mono); }
+
+    .repo-mini {
+      padding: 10px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.12s;
+    }
+    .repo-mini:hover { border-color: var(--border-3); }
+    .repo-mini-name { font-size: 13px; font-weight: 500; color: var(--text-1); margin-bottom: 4px; font-family: var(--mono); }
+    .repo-mini-meta { font-size: 11px; color: var(--text-3); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">
+    <div class="logo-box"><i class=""><img src="logo/logo.png" alt="" class="logo-box"></i></div>
+    Morixa Hub
+  </a>
+  <div class="nav-links">
+    <a href="/"><i class="ti ti-home"></i> Feed</a>
+    <a href="/repositories.html"><i class="ti ti-folder"></i> Repositories</a>
+    <a href="/chat.html"><i class="ti ti-message"></i> Messages</a>
+    <a href="/notifications.html"><i class="ti ti-bell"></i> Notifications</a>
+    <a href="/profile.html" class="active"><i class="ti ti-user"></i> Profile</a>
+  </div>
+</nav>
+
+<!-- Cover -->
+<div class="cover"></div>
+
+<!-- Profile header -->
+<div class="profile-header">
+  <div class="avatar-wrap">
+    <div class="avatar-lg" id="avatar-lg">?</div>
+  </div>
+  <div class="profile-actions">
+    <button class="btn" onclick="showEdit()"><i class="ti ti-edit"></i> Edit profile</button>
+    <button class="btn btn-danger" onclick="logout()"><i class="ti ti-logout"></i> Sign out</button>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- Left column -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <div class="card">
+      <div class="profile-name" id="profile-name">Loading...</div>
+      <div class="profile-title" id="profile-title">—</div>
+      <div class="profile-tags">
+        <span class="tag tag-neutral"><i class="ti ti-map-pin" style="font-size:10px"></i> <span id="profile-country">—</span></span>
+        <span class="tag tag-neutral"><i class="ti ti-award" style="font-size:10px"></i> <span id="profile-level">—</span></span>
+        <span class="tag tag-neutral"><i class="ti ti-calendar" style="font-size:10px"></i> Member since 2024</span>
+      </div>
+      <p class="profile-bio" id="profile-bio">—</p>
+    </div>
+
+    <div class="card">
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-num" id="stat-pts">—</div><div class="stat-label">Points</div></div>
+        <div class="stat-box"><div class="stat-num" id="stat-posts">—</div><div class="stat-label">Posts</div></div>
+        <div class="stat-box"><div class="stat-num" id="stat-followers">—</div><div class="stat-label">Followers</div></div>
+        <div class="stat-box"><div class="stat-num" id="stat-repos">—</div><div class="stat-label">Repos</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-file-text"></i> My publications</div>
+      <div id="posts-list"><div style="color:var(--text-3);font-size:13px;">Loading...</div></div>
+    </div>
+
+  </div>
+
+  <!-- Right column -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-trophy"></i> Level & Points</div>
+      <div class="level-badge">
+        <div class="level-icon"><i class="ti ti-award"></i></div>
+        <div>
+          <div class="level-name" id="level-name">—</div>
+          <div class="level-sub" id="level-pts">0 total points</div>
+        </div>
+      </div>
+      <div class="level-bar"><div class="level-fill" id="level-bar" style="width:0%"></div></div>
+      <div class="level-info"><span id="level-cur">—</span><span id="level-next">—</span></div>
+
+      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
+        <div class="card-title" style="margin-bottom:10px;"><i class="ti ti-history"></i> Recent activity</div>
+        <div id="pts-log"><div style="color:var(--text-3);font-size:12px;">Loading...</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-folder"></i> Repositories</div>
+      <div id="repos-list" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="color:var(--text-3);font-size:12px;">Loading...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal hidden" id="edit-modal">
+  <div class="modal-box">
+    <div class="modal-title"><i class="ti ti-edit"></i> Edit profile</div>
+    <div class="row-2">
+      <div class="field-group">
+        <label class="field-label">First name</label>
+        <input class="field-input" type="text" id="edit-firstname">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Last name</label>
+        <input class="field-input" type="text" id="edit-lastname">
+      </div>
+    </div>
+    <div class="field-group" style="margin-top:12px;">
+      <label class="field-label">Specialty</label>
+      <select class="field-input" id="edit-specialty">
+        <option>Internal Medicine</option><option>Cardiology</option>
+        <option>Pediatrics</option><option>Neurology</option>
+        <option>Infectious Diseases</option><option>General Surgery</option>
+        <option>Emergency Medicine</option><option>Other</option>
+      </select>
+    </div>
+    <div class="row-2" style="margin-top:12px;">
+      <div class="field-group">
+        <label class="field-label">Hospital</label>
+        <input class="field-input" type="text" id="edit-hospital">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Country</label>
+        <input class="field-input" type="text" id="edit-country">
+      </div>
+    </div>
+    <div class="field-group" style="margin-top:12px;">
+      <label class="field-label">Bio</label>
+      <textarea class="field-input" id="edit-bio" style="min-height:80px;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeEdit()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProfile()"><i class="ti ti-check"></i> Save changes</button>
+    </div>
+  </div>
+</div>
+
+<script src="/api.js"></script>
+<script>
+  const LEVELS = [
+    {name:"Intern",min:0,max:499},{name:"Resident",min:500,max:1999},
+    {name:"Specialist",min:2000,max:4999},{name:"Professor",min:5000,max:99999}
+  ];
+
+  const ACT_ICONS = {
+    publication: "ti-file-plus", commentaire: "ti-message-circle",
+    fichier: "ti-upload", favori_recu: "ti-heart", repo_cree: "ti-folder-plus"
+  };
+
+/* ============================================================
+   profile.html — Remplacez la fonction init() entière par celle-ci.
+   Elle détecte ?id=X dans l'URL :
+     - si absent ou égal à votre propre id → affiche VOTRE profil + bouton Edit
+     - si présent et différent → affiche LE PROFIL DE CET UTILISATEUR (lecture seule)
+   ============================================================ */
+
+let viewedUser   = null;   // l'utilisateur affiché sur la page
+let isOwnProfile = true;
+
+async function init() {
+  const params      = new URLSearchParams(window.location.search);
+  const targetId    = params.get("id");
+  const me          = getUser();
+  const myId        = getUserId();
+
+  isOwnProfile = !targetId || parseInt(targetId) === myId;
+
+  // ── Charger les bonnes données ──────────────────────────
+  if (isOwnProfile) {
+    viewedUser = me;
+  } else {
+    try {
+      viewedUser = await apiFetch(`/users/${targetId}`);
+    } catch (e) {
+      document.querySelector(".page-wrap").innerHTML =
+        `<div class="card" style="text-align:center;padding:48px;color:var(--text-3);">
+          <i class="ti ti-user-off" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+          User not found.
+        </div>`;
+      return;
+    }
+  }
+
+  if (!viewedUser || !viewedUser.full_name) return;
+
+  // ── Boutons d'action (Edit/Logout/follows vs Message) ───────────
+ 
+const actionsEl = document.querySelector(".profile-actions");
+if (isOwnProfile) {
+  actionsEl.innerHTML = `
+    <button class="btn" onclick="showEdit()"><i class="ti ti-edit"></i> Edit profile</button>
+    <button class="btn btn-danger" onclick="logout()"><i class="ti ti-logout"></i> Sign out</button>`;
+} else {
+  actionsEl.innerHTML = `
+    <button class="btn" id="follow-btn" onclick="toggleFollow(${viewedUser.id})">
+      <i class="ti ti-user-plus"></i> Follow
+    </button>
+    <button class="btn btn-primary" onclick="window.location='/chat.html?peer=${viewedUser.id}'">
+      <i class="ti ti-message"></i> Message
+    </button>`;
+}
+
+  // ── Infos de base ────────────────────────────────────────
+  const parts    = viewedUser.full_name.split(" ");
+  const initials = parts.map(p=>p[0]).join("").toUpperCase().slice(0,2);
+  document.getElementById("avatar-lg").textContent      = initials;
+  document.getElementById("profile-name").textContent   = "Dr. " + viewedUser.full_name;
+  document.getElementById("profile-title").textContent  = [viewedUser.specialty, viewedUser.hospital, viewedUser.country].filter(Boolean).join(" · ");
+  document.getElementById("profile-country").textContent = viewedUser.country || "—";
+  document.getElementById("profile-level").textContent   = viewedUser.level   || "Intern";
+  document.getElementById("profile-bio").textContent     = viewedUser.bio     || "No bio yet.";
+
+  
+// Affichage du badge de vérification sur le profil
+  const verifContainer = document.createElement("span");
+  verifContainer.id = "verif-badge-container";
+  document.querySelector(".profile-tags").appendChild(verifContainer);
+  await loadVerifStatus(viewedUser.id);
+
+  // ── Stats ────────────────────────────────────────────────
+  const pts = viewedUser.total_points || 0;
+  document.getElementById("stat-pts").textContent   = pts.toLocaleString();
+  document.getElementById("stat-posts").textContent = viewedUser.posts_count || "—";
+
+  // ── Level bar ────────────────────────────────────────────
+  const lvl  = LEVELS.find(l=>pts>=l.min&&pts<=l.max)||LEVELS[0];
+  const next = LEVELS[LEVELS.indexOf(lvl)+1];
+  const pct  = next ? Math.round(((pts-lvl.min)/(next.min-lvl.min))*100) : 100;
+  document.getElementById("level-name").textContent  = lvl.name;
+  document.getElementById("level-pts").textContent   = pts.toLocaleString() + " total points";
+  document.getElementById("level-bar").style.width   = pct + "%";
+  document.getElementById("level-cur").textContent   = lvl.name;
+  document.getElementById("level-next").textContent  = next ? `${next.min.toLocaleString()} → ${next.name}` : "Max level";
+
+  // ── Prefill edit form (seulement si c'est mon profil) ────
+  if (isOwnProfile) {
+    document.getElementById("edit-firstname").value = parts[0] || "";
+    document.getElementById("edit-lastname").value  = parts.slice(1).join(" ") || "";
+    document.getElementById("edit-hospital").value  = viewedUser.hospital || "";
+    document.getElementById("edit-country").value   = viewedUser.country  || "";
+    document.getElementById("edit-bio").value       = viewedUser.bio      || "";
+  }
+
+  
+await Promise.all([
+  loadPosts(viewedUser.id),
+  loadPoints(viewedUser.id),
+  loadRepos(viewedUser.id),
+  loadFollowStatus(viewedUser.id)
+]);
+  // Cacher la section "Recent activity" si on regarde le profil d'un autre (vie privée)
+  if (!isOwnProfile) {
+    const activitySection = document.querySelector("#pts-log")?.closest(".card");
+    if (activitySection) {
+      const block = activitySection.querySelector('div[style*="border-top"]');
+      if (block) block.style.display = "none";
+    }
+  }
+}
+
+
+/* ============================================================
+   Remplacez aussi saveProfile() pour qu'elle utilise toujours
+   l'ID de l'utilisateur connecté (pas viewedUser) — sécurité.
+   ============================================================ */
+
+async function saveProfile() {
+  const fn = document.getElementById("edit-firstname").value.trim();
+  const ln = document.getElementById("edit-lastname").value.trim();
+  const sp = document.getElementById("edit-specialty").value;
+  const ho = document.getElementById("edit-hospital").value.trim();
+  const co = document.getElementById("edit-country").value.trim();
+  const bi = document.getElementById("edit-bio").value.trim();
+  const u  = getUser();   // toujours l'utilisateur connecté, jamais viewedUser
+
+  try {
+    await apiFetch(`/users/${u.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ specialty: sp, hospital: ho, country: co, bio: bi })
+    });
+    u.full_name = `${fn} ${ln}`; u.specialty=sp; u.hospital=ho; u.country=co; u.bio=bi;
+    localStorage.setItem("medhub_user", JSON.stringify(u));
+
+    document.getElementById("profile-name").textContent  = "Dr. " + u.full_name;
+    document.getElementById("profile-title").textContent = [sp,ho,co].filter(Boolean).join(" · ");
+    document.getElementById("profile-bio").textContent   = bi;
+    document.getElementById("profile-country").textContent = co;
+    const ini = u.full_name.split(" ").map(p=>p[0]).join("").toUpperCase().slice(0,2);
+    document.getElementById("avatar-lg").textContent = ini;
+    closeEdit();
+  } catch(e) { alert("Could not save profile."); }
+}
+
+  async function loadPosts(uid) {
+    try {
+      const data = await apiFetch(`/posts/?user_id=${uid}&per_page=5`);
+      const DOT  = {cas_clinique:"dot-cas",protocole:"dot-proto",recherche:"dot-recherche",article:"dot-article"};
+      if (!data.posts.length) {
+        document.getElementById("posts-list").innerHTML = `<div style="color:var(--text-3);font-size:13px;">No publications yet.</div>`;
+        document.getElementById("stat-posts").textContent = "0";
+        return;
+      }
+      document.getElementById("stat-posts").textContent = data.total;
+      document.getElementById("posts-list").innerHTML = data.posts.map(p=>`
+        <div class="post-item" onclick="window.location='/post.html?id=${p.id}'">
+          <div class="post-type-dot ${DOT[p.post_type]||""}"></div>
+          <div>
+            <div class="post-item-title">${p.title}</div>
+            <div class="post-item-meta">
+              <span><i class="ti ti-heart" style="font-size:11px"></i> ${p.likes||0}</span>
+              <span><i class="ti ti-message-circle" style="font-size:11px"></i> ${p.comments_count||0}</span>
+              <span>${timeAgo(p.created_at)}</span>
+            </div>
+          </div>
+        </div>`).join("");
+    } catch(e) { document.getElementById("posts-list").innerHTML=`<div style="color:var(--tag-cas-fg);font-size:13px;">Could not load posts.</div>`; }
+  }
+
+  async function loadPoints(uid) {
+    try {
+      const logs = await apiFetch(`/users/${uid}/points`);
+      if (!logs.length) { document.getElementById("pts-log").innerHTML=`<div style="color:var(--text-3);font-size:12px;">No activity yet.</div>`; return; }
+      document.getElementById("pts-log").innerHTML = logs.slice(0,5).map(l=>`
+        <div class="pts-log-item">
+          <i class="ti ${ACT_ICONS[l.action]||"ti-star"}" style="color:var(--text-2);font-size:15px;"></i>
+          <span class="pts-action">${l.action.replace(/_/g," ")}</span>
+          <span class="pts-val">+${l.points}</span>
+        </div>`).join("");
+    } catch(e) {}
+  }
+
+  async function loadRepos(uid) {
+    try {
+      const data = await apiFetch(`/repos/?user_id=${uid}`);
+      document.getElementById("stat-repos").textContent = data.repos.length;
+      if (!data.repos.length) {
+        document.getElementById("repos-list").innerHTML=`<div style="color:var(--text-3);font-size:12px;">No repositories yet.</div>`;
+        return;
+      }
+      document.getElementById("repos-list").innerHTML = data.repos.slice(0,3).map(r=>`
+        <div class="repo-mini" onclick="window.location='/repo-detail.html?id=${r.id}'">
+          <div class="repo-mini-name"><i class="ti ti-folder" style="font-size:13px;margin-right:4px;"></i>${r.name}</div>
+          <div class="repo-mini-meta">${r.files_count} files · <i class="ti ti-star" style="font-size:11px"></i> ${r.stars}</div>
+        </div>`).join("");
+    } catch(e) {}
+  }
+
+  function showEdit()  { document.getElementById("edit-modal").classList.remove("hidden"); }
+  function closeEdit() { document.getElementById("edit-modal").classList.add("hidden"); }
+
+  async function saveProfile() {
+    const fn = document.getElementById("edit-firstname").value.trim();
+    const ln = document.getElementById("edit-lastname").value.trim();
+    const sp = document.getElementById("edit-specialty").value;
+    const ho = document.getElementById("edit-hospital").value.trim();
+    const co = document.getElementById("edit-country").value.trim();
+    const bi = document.getElementById("edit-bio").value.trim();
+    const u  = getUser();
+    try {
+      await apiFetch(`/users/${u.id}`, { method:"PUT", body:JSON.stringify({specialty:sp,hospital:ho,country:co,bio:bi}) });
+      u.full_name = `${fn} ${ln}`; u.specialty=sp; u.hospital=ho; u.country=co; u.bio=bi;
+      localStorage.setItem("medhub_user", JSON.stringify(u));
+      document.getElementById("profile-name").textContent  = "Dr. " + u.full_name;
+      document.getElementById("profile-title").textContent = [sp,ho,co].filter(Boolean).join(" · ");
+      document.getElementById("profile-bio").textContent   = bi;
+      document.getElementById("profile-country").textContent = co;
+      const ini = u.full_name.split(" ").map(p=>p[0]).join("").toUpperCase().slice(0,2);
+      document.getElementById("avatar-lg").textContent = ini;
+      closeEdit();
+    } catch(e) { alert("Could not save profile."); }
+  }
+
+  function logout() {
+    localStorage.removeItem("medhub_token");
+    localStorage.removeItem("medhub_user");
+    window.location.href = "/login.html";
+  }
+
+  function timeAgo(s) {
+    const d=(Date.now()-new Date(s))/1000;
+    if(d<60) return "just now";
+    if(d<3600) return `${Math.floor(d/60)}m ago`;
+    if(d<86400) return `${Math.floor(d/3600)}h ago`;
+    return `${Math.floor(d/86400)}d ago`;
+  }
+
+  
+async function loadFollowStatus(userId) {
+  try {
+    const data = await apiFetch(`/follows/${userId}?viewer_id=${getUserId()}`);
+    document.getElementById("stat-followers").textContent = data.followers_count.toLocaleString();
+    if (!isOwnProfile) updateFollowBtn(data.is_following);
+  } catch (e) {}
+}
+
+function updateFollowBtn(isFollowing) {
+  const btn = document.getElementById("follow-btn");
+  if (!btn) return;
+  if (isFollowing) {
+    btn.innerHTML = `<i class="ti ti-user-check"></i> Following`;
+    btn.classList.add("btn-primary");
+  } else {
+    btn.innerHTML = `<i class="ti ti-user-plus"></i> Follow`;
+    btn.classList.remove("btn-primary");
+  }
+}
+
+async function toggleFollow(userId) {
+  const btn = document.getElementById("follow-btn");
+  btn.disabled = true;
+  try {
+    const data = await apiFetch(`/follows/${userId}/toggle`, {
+      method: "POST",
+      body: JSON.stringify({ follower_id: getUserId() }),
+    });
+    updateFollowBtn(data.is_following);
+    document.getElementById("stat-followers").textContent = data.followers_count.toLocaleString();
+    showToast(data.is_following ? "You are now following this physician" : "Unfollowed", "success");
+  } catch (e) {
+    showToast(e.error || "Could not update follow status.", "error");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+
+async function loadVerifStatus(userId) {
+  try {
+    const data = await apiFetch(`/verification/status/${userId}`);
+    const container = document.getElementById("verif-badge-container");
+    if (container) container.innerHTML = renderVerifBadge(data.verif_level);
+
+    // Si c'est mon profil et je ne suis pas encore vérifié au niveau maximal,
+    // afficher le widget de vérification
+    if (isOwnProfile && data.verif_level !== "verified" && data.verif_level !== "registry") {
+      renderVerifWidget(data);
+    }
+  } catch (e) {}
+}
+
+function renderVerifWidget(data) {
+  // Injecter le widget dans la colonne droite après le widget Level & Points
+  const widget = document.createElement("div");
+  widget.className = "card";
+  widget.id = "verif-widget";
+
+  let content = "";
+
+  if (data.verif_level === "document") {
+    content = `
+      <div style="font-size:13px;color:var(--text-2);line-height:1.7;">
+        Your verification request is <strong style="color:var(--tag-proto-fg);">under review</strong>.
+        We will notify you within 48 hours.
+        ${data.request?.reviewer_note
+          ? `<div style="margin-top:8px;color:var(--tag-cas-fg);font-size:12px;">
+               Note: ${data.request.reviewer_note}
+             </div>`
+          : ""}
+      </div>`;
+  } else {
+    content = `
+      <div style="font-size:13px;color:var(--text-2);line-height:1.7;margin-bottom:14px;">
+        Verify your medical license to get the <strong>Verified Physician</strong> badge,
+        visible on your profile and all your publications.
+      </div>
+      <div class="field-group">
+        <label class="field-label">License / Registration number</label>
+        <input class="field-input" type="text" id="verif-license" placeholder="e.g. MDC/2019/12345">
+      </div>
+      <div class="field-group" style="margin-top:10px;">
+        <label class="field-label">Country of registration</label>
+        <input class="field-input" type="text" id="verif-country" placeholder="e.g. Uganda">
+      </div>
+      <div class="field-group" style="margin-top:10px;">
+        <label class="field-label">Supporting document (license card, diploma or registration certificate)</label>
+        <div class="drop-zone" style="padding:16px;margin-top:4px;"
+             onclick="document.getElementById('verif-doc').click()">
+          <i class="ti ti-upload" style="font-size:20px;display:block;margin-bottom:6px;color:var(--text-3);"></i>
+          <span id="verif-doc-label" style="font-size:12px;">PDF, JPG or PNG — max 10 MB</span>
+          <input type="file" id="verif-doc" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                 onchange="document.getElementById('verif-doc-label').textContent=this.files[0]?.name||'No file selected'">
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="submitVerification()">
+          <i class="ti ti-shield-check"></i> Submit for review
+        </button>
+      </div>`;
+  }
+
+  widget.innerHTML = `
+    <div class="widget-title"><i class="ti ti-shield-check"></i> Physician Verification</div>
+    ${content}`;
+
+  // Insérer dans la colonne droite
+  const rightCol = document.querySelector(".page-wrap > div:last-child");
+  if (rightCol) rightCol.prepend(widget);
+}
+
+async function submitVerification() {
+  const license  = document.getElementById("verif-license")?.value.trim();
+  const country  = document.getElementById("verif-country")?.value.trim();
+  const docInput = document.getElementById("verif-doc");
+
+  if (!license) return showToast("Please enter your license number.", "error");
+  if (!docInput?.files.length) return showToast("Please attach a supporting document.", "error");
+
+  const fd = new FormData();
+  fd.append("user_id",        getUserId());
+  fd.append("license_number", license);
+  fd.append("country",        country);
+  fd.append("document",       docInput.files[0]);
+
+  try {
+    await fetch("http://localhost:5000/api/verification/submit", {
+      method:  "POST",
+      headers: { "Authorization": `Bearer ${getToken()}` },
+      body:    fd,
+    });
+    showToast("Verification request submitted! We'll review it within 48 hours.", "success");
+    await loadVerifStatus(getUserId());
+    document.getElementById("verif-widget")?.remove();
+  } catch (e) {
+    showToast("Submission failed. Please try again.", "error");
+  }
+}
+
+
+  init();
+</script>
+</body>
+</html>
