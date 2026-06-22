@@ -38,8 +38,6 @@ def create_app():
     CORS(app, resources={r"/api/*": {"origins": "*"}})
     db.init_app(app)
 
-    # Expose app au niveau module pour gunicorn app:app
-    app = create_app()
 
     # Blueprints
     from routes.auth         import auth_bp
@@ -73,6 +71,5 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    # En local : debug activé. En prod, gunicorn gère ça.
     debug = os.environ.get("FLASK_DEBUG", "true").lower() == "true"
-    app.run(debug=debug, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=debug, host="0.0.0.0", port=int(os.environ.get("PORT", 5000))
