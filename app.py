@@ -38,6 +38,9 @@ def create_app():
     CORS(app, resources={r"/api/*": {"origins": "*"}})
     db.init_app(app)
 
+    # Expose app au niveau module pour gunicorn app:app
+    app = create_app()
+
     # Blueprints
     from routes.auth         import auth_bp
     from routes.posts        import posts_bp
