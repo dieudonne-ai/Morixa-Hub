@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Morixa Hub — Post</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
   <link rel="stylesheet" href="style.css">
@@ -144,6 +144,16 @@
       .layout { grid-template-columns: 1fr; }
       .sidebar-sticky { display: none; }
     }
+
+    
+/* ── post.html ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .layout { display: flex; flex-direction: column; }
+  .post-title-lg { font-size: 17px; }
+  .post-body-text { font-size: 13px; }
+  .action-bar { gap: 4px; }
+  .action-btn span { display: none; }
+}
   </style>
 </head>
 <body>
@@ -494,5 +504,13 @@ async function downloadFile(fileId, fileName) {
 
   init();
 </script>
+<!-- post.html, post-create.html, chat.html, repo-detail.html → aucune active -->
+<nav class="bottom-nav">
+  <a href="/"><i class="ti ti-home"></i> Feed</a>
+  <a href="/repositories.html"><i class="ti ti-folder"></i> Repos</a>
+  <a href="/post-create.html"><i class="ti ti-plus"></i> Post</a>
+  <a href="/notifications.html"><i class="ti ti-bell"></i> Alerts</a>
+  <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
+</nav>
 </body>
 </html>

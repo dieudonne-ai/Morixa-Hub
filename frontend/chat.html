@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Morixa Hub — Messages</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
   <link rel="stylesheet" href="style.css">
@@ -230,6 +230,47 @@
   .msg-file i { font-size: 18px; color: var(--text-3); }
   .msg-file .file-meta { display: flex; flex-direction: column; gap: 1px; }
   .msg-file .file-meta span:first-child { color: var(--text-1); font-weight: 500; }
+
+/* ── chat.html ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .chat-layout { position: relative; height: calc(100vh - 104px); }
+
+  .chat-sidebar {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    z-index: 10;
+    transition: transform 0.25s ease;
+  }
+
+  .chat-sidebar.hidden-mobile {
+    transform: translateX(-100%);
+  }
+
+  .chat-window {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+  }
+
+  .chat-window.active {
+    display: flex;
+  }
+
+  /* Bouton retour dans le header du chat */
+  .chat-back-btn {
+    display: flex !important;
+  }
+
+  .chat-messages { padding: 12px; }
+  .bubble { max-width: 82%; font-size: 13px; }
+  .chat-input-bar { padding: 8px 10px; }
+  .chat-input-bar input { font-size: 16px; } /* éviter zoom iOS */
+}
+
+/* Masquer le bouton retour sur desktop */
+.chat-back-btn { display: none; }
   </style>
 </head>
 <body>
@@ -276,6 +317,9 @@
 <!-- 1. HEADER DU CHAT — remplacez entièrement le div.chat-header -->
 <div class="chat-header">
 
+<button class="btn btn-icon chat-back-btn" onclick="showConvList()" title="Back">
+  <i class="ti ti-arrow-left"></i>
+</button>
   <!-- Avatar cliquable → profil -->
   <div class="avatar" id="peer-avatar" style="cursor:pointer;"
        onclick="goToPeerProfile()">?</div>
@@ -401,10 +445,17 @@ if (peerId && parseInt(peerId) !== getUserId()) {
     renderConvs(conversations.filter(c => (c.peer?.full_name||"").toLowerCase().includes(q)));
   }
 
-  async function openConv(peerId) {
-    const conv = conversations.find(c => c.peer?.id === peerId);
-    if (!conv) return;
-    activeConv = conv;
+async function openConv(peerId) {
+  const conv = conversations.find(c => c.peer?.id === peerId);
+  if (!conv) return;
+  activeConv = conv;
+
+  // Sur mobile : masquer la liste, afficher le chat
+  if (window.innerWidth <= 768) {
+    document.querySelector(".chat-sidebar").classList.add("hidden-mobile");
+    document.getElementById("no-conv").style.display    = "none";
+    document.getElementById("active-chat").style.display = "flex";
+  }
 
     // Update sidebar active state
     document.querySelectorAll(".conv-item").forEach(el => el.classList.remove("active"));
@@ -583,11 +634,6 @@ async function sendAttachment(input) {
   input.value = "";
 }
 
-/* ── Mise à jour de renderMessages() ─────────────────────
-   Ajoutez cette fonction pour détecter les messages avec fichier
-   et afficher une bulle spéciale. Remplacez le renderMessages()
-   existant par celui-ci : */
-
 function renderMessages(msgs) {
   if (!msgs.length) {
     return `<div class="chat-empty"><i class="ti ti-message-2"></i><p>No messages yet. Say hello!</p></div>`;
@@ -665,8 +711,15 @@ function appendLocalMessage({ from, body, time, tempId }) {
 }
 
   init();
-
-  
 </script>
+
+<!-- post.html, post-create.html, chat.html, repo-detail.html → aucune active -->
+<nav class="bottom-nav">
+  <a href="/"><i class="ti ti-home"></i> Feed</a>
+  <a href="/repositories.html"><i class="ti ti-folder"></i> Repos</a>
+  <a href="/post-create.html"><i class="ti ti-plus"></i> Post</a>
+  <a href="/notifications.html"><i class="ti ti-bell"></i> Alerts</a>
+  <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
+</nav>
 </body>
 </html>

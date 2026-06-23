@@ -11,7 +11,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Morixa Hub — Feed</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
   <link rel="stylesheet" href="style.css">
@@ -83,6 +83,19 @@
 
     /* Skeleton */
     .skeleton-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+
+@media (max-width: 768px) {
+  .topbar { border-radius: var(--radius); padding: 8px 10px; }
+  .composer { padding: 10px; gap: 8px; }
+  .composer-input { font-size: 12px; padding: 7px 10px; }
+  .post-card { padding: 12px 14px; }
+  .post-title { font-size: 13px; }
+  .post-body  { font-size: 12px; -webkit-line-clamp: 3; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; }
+  .action-btn { padding: 4px 8px; font-size: 11px; }
+  .action-btn span { display: none; } /* masquer texte "Share", garder icône */
+  .filters { gap: 4px; }
+  .filter-btn { padding: 4px 10px; font-size: 11px; }
+}
   </style>
 </head>
 <body>
@@ -384,14 +397,23 @@
     } catch(e) { document.getElementById("leaderboard-list").innerHTML=`<div style="color:var(--text-3);font-size:12px;">Unavailable</div>`; }
   }
 
-  async function loadUnreadCounts() {
-    try {
-      const notifs = await apiFetch(`/users/${getUserId()}/notifications`);
-      const count  = notifs.filter(n=>!n.is_read).length;
-      const b = document.getElementById("notif-badge");
-      if (count>0) { b.textContent=count; b.style.display="inline"; }
-    } catch(_) {}
-  }
+async function loadUnreadCounts() {
+  try {
+    const notifs = await apiFetch(`/users/${getUserId()}/notifications`);
+    const count  = notifs.filter(n => !n.is_read).length;
+
+    // Navbar desktop
+    const b = document.getElementById("notif-badge");
+    if (b && count > 0) { b.textContent = count; b.style.display = "inline"; }
+
+    // Bottom nav mobile
+    const bn = document.getElementById("bn-notif");
+    if (bn) {
+      bn.style.display = count > 0 ? "flex" : "none";
+      bn.textContent   = count > 9 ? "9+" : count;
+    }
+  } catch (_) {}
+}
 
   function setFilter(btn, type) {
     document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
@@ -441,5 +463,17 @@
     setTimeout(()=>t.remove(),3500);
   }
 </script>
+
+<!-- index.html → active sur "Feed" -->
+<nav class="bottom-nav">
+  <a href="/" class="active"><i class="ti ti-home"></i> Feed</a>
+  <a href="/repositories.html"><i class="ti ti-folder"></i> Repos</a>
+  <a href="/post-create.html"><i class="ti ti-plus"></i> Post</a>
+  <a href="/notifications.html"><i class="ti ti-bell"></i>
+    <span class="bn-badge" id="bn-notif" style="display:none">!</span>
+    Alerts
+  </a>
+  <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
+</nav>
 </body>
 </html>

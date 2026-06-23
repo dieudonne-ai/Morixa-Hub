@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Morixa Hub — Sign in</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
   <link rel="stylesheet" href="style.css">
@@ -168,6 +168,25 @@
       margin-top: 20px;
       line-height: 1.6;
     }
+
+    
+/* ── login.html ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  body { flex-direction: column; }
+  .left-panel {
+    width: 100%;
+    padding: 24px 20px;
+    min-height: auto;
+  }
+  .left-panel h1 { font-size: 18px; margin-bottom: 8px; }
+  .left-panel p  { display: none; } /* masquer description longue */
+  .feature-list  { display: none; } /* masquer features list */
+  .left-panel .logo { margin-bottom: 16px; }
+  .right-panel { padding: 16px 20px; align-items: flex-start; }
+  .auth-box { max-width: 100%; }
+  .auth-box h2 { font-size: 17px; }
+  .field-input { font-size: 16px; } /* éviter zoom iOS */
+}
   </style>
 </head>
 <body>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Morixa Hub — Profile</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
   <link rel="stylesheet" href="style.css">
@@ -177,6 +177,23 @@
     .repo-mini:hover { border-color: var(--border-3); }
     .repo-mini-name { font-size: 13px; font-weight: 500; color: var(--text-1); margin-bottom: 4px; font-family: var(--mono); }
     .repo-mini-meta { font-size: 11px; color: var(--text-3); }
+
+    
+/* ── profile.html ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: unset !important;
+  }
+  .cover { height: 110px; }
+  .avatar-lg { width: 72px; height: 72px; font-size: 22px; }
+  .avatar-wrap { top: -36px; }
+  .profile-name { font-size: 16px; margin-top: 44px; }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+  .profile-actions { gap: 6px; }
+  .profile-actions .btn { font-size: 12px; padding: 6px 10px; }
+}
   </style>
 </head>
 <body>
@@ -709,5 +726,14 @@ async function submitVerification() {
 
   init();
 </script>
+
+<!-- profile.html → active sur "Profile" -->
+<nav class="bottom-nav">
+  <a href="/"><i class="ti ti-home"></i> Feed</a>
+  <a href="/repositories.html"><i class="ti ti-folder"></i> Repos</a>
+  <a href="/post-create.html"><i class="ti ti-plus"></i> Post</a>
+  <a href="/notifications.html"><i class="ti ti-bell"></i> Alerts</a>
+  <a href="/profile.html" class="active"><i class="ti ti-user"></i> Profile</a>
+</nav>
 </body>
 </html>

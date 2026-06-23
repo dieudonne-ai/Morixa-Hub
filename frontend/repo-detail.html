@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Morixa Hub — Repository</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
   <link rel="stylesheet" href="style.css">
@@ -68,6 +68,20 @@
     /* Empty state */
     .empty-state { text-align: center; padding: 40px; color: var(--text-3); }
     .empty-state i { font-size: 36px; display: block; margin-bottom: 10px; }
+
+    
+/* ── repo-detail.html ────────────────────────────────────── */
+@media (max-width: 768px) {
+  .files-table thead { display: none; } /* masquer headers de colonnes */
+  .files-table td { display: block; padding: 4px 10px; }
+  .files-table tr { display: block; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .files-table tr td:nth-child(2),
+  .files-table tr td:nth-child(3),
+  .files-table tr td:nth-child(4) { display: none; } /* garder seulement nom + bouton */
+  .repo-actions { flex-wrap: wrap; gap: 6px; }
+  .repo-actions .btn { flex: 1; justify-content: center; }
+}
+
   </style>
 </head>
 <body>
@@ -415,5 +429,14 @@ async function downloadFile(fileId, fileName) {
 
   init();
 </script>
+
+<!-- post.html, post-create.html, chat.html, repo-detail.html → aucune active -->
+<nav class="bottom-nav">
+  <a href="/"><i class="ti ti-home"></i> Feed</a>
+  <a href="/repositories.html"><i class="ti ti-folder"></i> Repos</a>
+  <a href="/post-create.html"><i class="ti ti-plus"></i> Post</a>
+  <a href="/notifications.html"><i class="ti ti-bell"></i> Alerts</a>
+  <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
+</nav>
 </body>
 </html>

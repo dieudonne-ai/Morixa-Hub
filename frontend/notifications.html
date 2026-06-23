@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Morixa Hub — Notifications</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
   <link rel="stylesheet" href="style.css">
@@ -139,6 +139,15 @@
 
     .empty-state { text-align: center; padding: 60px 20px; color: var(--text-3); }
     .empty-state i { font-size: 44px; display: block; margin-bottom: 12px; }
+
+    
+/* ── notifications.html ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .filter-tabs { overflow-x: auto; gap: 4px; }
+  .ftab { min-width: 70px; font-size: 11px; padding: 6px 8px; }
+  .notif-item { padding: 10px 12px; }
+  .notif-text { font-size: 12px; }
+}
   </style>
 </head>
 <body>
