@@ -98,7 +98,7 @@
 }
   </style>
 </head>
-<body>
+<body class="full-height">
 
 <!-- Navbar -->
 <nav class="navbar">
@@ -402,15 +402,15 @@ async function loadUnreadCounts() {
     const notifs = await apiFetch(`/users/${getUserId()}/notifications`);
     const count  = notifs.filter(n => !n.is_read).length;
 
-    // Navbar desktop
+    // Badge navbar desktop
     const b = document.getElementById("notif-badge");
-    if (b && count > 0) { b.textContent = count; b.style.display = "inline"; }
+    if (b) { b.textContent = count; b.style.display = count > 0 ? "inline" : "none"; }
 
-    // Bottom nav mobile
+    // Badge bottom nav mobile
     const bn = document.getElementById("bn-notif");
     if (bn) {
       bn.style.display = count > 0 ? "flex" : "none";
-      bn.textContent   = count > 9 ? "9+" : count;
+      bn.textContent   = count > 9 ? "9+" : String(count);
     }
   } catch (_) {}
 }
@@ -464,16 +464,16 @@ async function loadUnreadCounts() {
   }
 </script>
 
-<!-- index.html → active sur "Feed" -->
 <nav class="bottom-nav">
-  <a href="/" class="active"><i class="ti ti-home"></i> Feed</a>
-  <a href="/repositories.html"><i class="ti ti-folder"></i> Repos</a>
-  <a href="/post-create.html"><i class="ti ti-plus"></i> Post</a>
-  <a href="/notifications.html"><i class="ti ti-bell"></i>
-    <span class="bn-badge" id="bn-notif" style="display:none">!</span>
+  <a href="/" class="active"><i class="ti ti-home"></i>Feed</a>
+  <a href="/repositories.html"><i class="ti ti-folder"></i>Repos</a>
+  <a href="/post-create.html"><i class="ti ti-plus"></i>Publish</a>
+  <a href="/notifications.html">
+    <i class="ti ti-bell"></i>
+    <span class="bn-badge" id="bn-notif" style="display:none"></span>
     Alerts
   </a>
-  <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
+  <a href="/profile.html"><i class="ti ti-user"></i>Profile</a>
 </nav>
 </body>
 </html>
