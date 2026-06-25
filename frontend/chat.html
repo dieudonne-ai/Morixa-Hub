@@ -273,7 +273,7 @@
 .chat-back-btn { display: none; }
   </style>
 </head>
-<body>
+<body class="full-height">
 
 <nav class="navbar">
   <a href="/" class="logo">
@@ -313,36 +313,34 @@
     </div>
 
     <div id="active-chat" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
-      
-<!-- 1. HEADER DU CHAT — remplacez entièrement le div.chat-header -->
+
 <div class="chat-header">
 
-<button class="btn btn-icon chat-back-btn" onclick="showConvList()" title="Back">
-  <i class="ti ti-arrow-left"></i>
-</button>
-  <!-- Avatar cliquable → profil -->
+  <!-- Bouton retour visible uniquement sur mobile -->
+  <button class="btn btn-icon"
+          id="chat-back-btn"
+          onclick="showConvList()"
+          style="display:none;"
+          title="Back">
+    <i class="ti ti-arrow-left"></i>
+  </button>
+
   <div class="avatar" id="peer-avatar" style="cursor:pointer;"
        onclick="goToPeerProfile()">?</div>
 
-  <!-- Nom cliquable → profil -->
   <div>
-    <div class="chat-peer-name" id="peer-name" style="cursor:pointer;"
-         onclick="goToPeerProfile()">—</div>
+    <div class="chat-peer-name" id="peer-name"
+         style="cursor:pointer;" onclick="goToPeerProfile()">—</div>
     <div class="chat-peer-status" id="peer-status">—</div>
   </div>
 
-  <!-- Actions à droite -->
   <div style="margin-left:auto; display:flex; gap:6px; position:relative;">
     <button class="btn btn-primary btn-sm" onclick="goToPeerProfile()">
       <i class="ti ti-user"></i> Profile
     </button>
-
-    <!-- Bouton 3 points -->
     <button class="btn btn-icon" id="menu-btn" onclick="toggleMenu(event)">
       <i class="ti ti-dots-vertical"></i>
     </button>
-
-    <!-- Dropdown menu -->
     <div id="chat-menu" class="chat-dropdown hidden">
       <div class="dropdown-item" onclick="goToPeerProfile()">
         <i class="ti ti-user"></i> View profile
@@ -350,18 +348,13 @@
       <div class="dropdown-item" onclick="clearConversation()">
         <i class="ti ti-trash"></i> Clear conversation
       </div>
-      <div class="dropdown-item" onclick="blockUser()">
-        <i class="ti ti-ban"></i> Block user
-      </div>
     </div>
   </div>
 </div>
 
       <div class="chat-messages" id="chat-messages"></div>
 
-      
-<!-- 2. BARRE D'INPUT — remplacez entièrement le div.chat-input-bar -->
-<div class="chat-input-bar">
+      <div class="chat-input-bar">
 
   <!-- Bouton pièce jointe -->
   <button class="btn btn-icon" title="Attach file" onclick="triggerAttach()">
@@ -384,45 +377,55 @@
 
 </div>
 
-<script src="/api.js"></script>
+<script src="api.js"></script>
 <script>
   const ME = getUser();
   let conversations = [];
   let activeConv    = null;
   let pollTimer     = null;
+  const isMobile    = () => window.innerWidth <= 768;
 
   async function init() {
     try {
       conversations = await apiFetch(`/messages/inbox/${getUserId()}`);
       renderConvs(conversations);
-      
-const params = new URLSearchParams(window.location.search);
-const peerId = params.get("peer");
-if (peerId && parseInt(peerId) !== getUserId()) {
-  const existing = conversations.find(c => c.peer?.id === parseInt(peerId));
-  if (existing) {
-    openConv(parseInt(peerId));
-  } else {
-    const peer = await apiFetch(`/users/${peerId}`);
-    conversations.unshift({ peer, last_message: "", last_time: new Date().toISOString(), unread_count: 0 });
-    renderConvs(conversations);
-    openConv(parseInt(peerId));
-  }
-}
+
+      // Ouvrir directement une conv si ?peer= dans l'URL
+      const params = new URLSearchParams(window.location.search);
+      const peerId = params.get("peer");
+      if (peerId && parseInt(peerId) !== getUserId()) {
+        const existing = conversations.find(c => c.peer?.id === parseInt(peerId));
+        if (existing) {
+          openConv(parseInt(peerId));
+        } else {
+          try {
+            const peer = await apiFetch(`/users/${peerId}`);
+            conversations.unshift({
+              peer, last_message: "", last_time: new Date().toISOString(), unread_count: 0
+            });
+            renderConvs(conversations);
+            openConv(parseInt(peerId));
+          } catch(_) {}
+        }
+      }
     } catch(e) {
       document.getElementById("conv-list").innerHTML =
-        `<div style="padding:20px;text-align:center;color:var(--text-3);font-size:13px;">Could not load messages.</div>`;
+        `<div style="padding:20px;text-align:center;color:var(--text-3);font-size:13px;">
+          Could not load messages.
+        </div>`;
     }
   }
 
   function renderConvs(list) {
     if (!list.length) {
       document.getElementById("conv-list").innerHTML =
-        `<div style="padding:20px;text-align:center;color:var(--text-3);font-size:13px;">No conversations yet.</div>`;
+        `<div style="padding:20px;text-align:center;color:var(--text-3);font-size:13px;">
+          No conversations yet.
+        </div>`;
       return;
     }
     document.getElementById("conv-list").innerHTML = list.map(c => {
-      const peer   = c.peer || {};
+      const peer    = c.peer || {};
       const initials = (peer.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2);
       return `
         <div class="conv-item ${activeConv?.peer?.id===peer.id?'active':''}"
@@ -445,37 +448,47 @@ if (peerId && parseInt(peerId) !== getUserId()) {
     renderConvs(conversations.filter(c => (c.peer?.full_name||"").toLowerCase().includes(q)));
   }
 
-async function openConv(peerId) {
-  const conv = conversations.find(c => c.peer?.id === peerId);
-  if (!conv) return;
-  activeConv = conv;
+  async function openConv(peerId) {
+    const conv = conversations.find(c => c.peer?.id === peerId);
+    if (!conv) return;
+    activeConv = conv;
 
-  // Sur mobile : masquer la liste, afficher le chat
-  if (window.innerWidth <= 768) {
-    document.querySelector(".chat-sidebar").classList.add("hidden-mobile");
-    document.getElementById("no-conv").style.display    = "none";
-    document.getElementById("active-chat").style.display = "flex";
-  }
-
-    // Update sidebar active state
+    // Sidebar active state
     document.querySelectorAll(".conv-item").forEach(el => el.classList.remove("active"));
     const item = document.getElementById(`conv-${peerId}`);
     if (item) { item.classList.add("active"); item.querySelector(".unread-dot")?.remove(); }
 
-    // Show chat header
+    // Header
     const peer     = conv.peer;
     const initials = (peer.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2);
     document.getElementById("peer-avatar").textContent  = initials;
     document.getElementById("peer-name").textContent    = "Dr. " + (peer.full_name||"Unknown");
-    document.getElementById("peer-status").textContent  = peer.specialty ? `${peer.specialty}` : "Physician";
-    document.getElementById("no-conv").style.display    = "none";
-    document.getElementById("active-chat").style.display = "flex";
+    document.getElementById("peer-status").textContent  = peer.specialty || "Physician";
+
+    // Mobile : masquer sidebar, montrer chat
+    if (isMobile()) {
+      document.querySelector(".chat-sidebar").classList.add("slide-out");
+      document.getElementById("chat-back-btn").style.display = "flex";
+      const activeChat = document.getElementById("active-chat");
+      activeChat.style.display = "flex";
+    } else {
+      document.getElementById("no-conv").style.display    = "none";
+      document.getElementById("active-chat").style.display = "flex";
+    }
 
     await loadMessages(peerId);
 
-    // Start polling every 5s
     clearInterval(pollTimer);
     pollTimer = setInterval(() => loadMessages(peerId), 5000);
+  }
+
+  function showConvList() {
+    // Mobile : revenir à la liste
+    document.querySelector(".chat-sidebar").classList.remove("slide-out");
+    document.getElementById("chat-back-btn").style.display = "none";
+    document.getElementById("active-chat").style.display   = "none";
+    activeConv = null;
+    clearInterval(pollTimer);
   }
 
   async function loadMessages(peerId) {
@@ -483,32 +496,39 @@ async function openConv(peerId) {
       const msgs = await apiFetch(`/messages/conversation/${getUserId()}/${peerId}`);
       const container = document.getElementById("chat-messages");
       const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 60;
-
       container.innerHTML = renderMessages(msgs);
-
       if (wasAtBottom) container.scrollTop = container.scrollHeight;
     } catch(e) {}
   }
 
   function renderMessages(msgs) {
-    if (!msgs.length) return `<div class="chat-empty"><i class="ti ti-message-2"></i><p>No messages yet. Say hello!</p></div>`;
-
-    let html = "";
-    let lastDate = "";
-
+    if (!msgs.length) {
+      return `<div class="chat-empty"><i class="ti ti-message-2"></i><p>No messages yet. Say hello!</p></div>`;
+    }
+    let html = "", lastDate = "";
     msgs.forEach(m => {
       const d = new Date(m.created_at).toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"});
-      if (d !== lastDate) {
-        html += `<div class="day-sep">${d}</div>`;
-        lastDate = d;
-      }
+      if (d !== lastDate) { html += `<div class="day-sep">${d}</div>`; lastDate = d; }
       const mine = m.sender_id === getUserId();
       const t    = new Date(m.created_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+      const ini  = (activeConv?.peer?.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2);
+      const fileMatch = m.body.match(/📎 (.+) \[file_id:(\d+)\]/);
       html += `
-        <div class="msg-row ${mine?'mine':''}">
-          ${!mine?`<div class="avatar" style="width:26px;height:26px;font-size:10px;">${(activeConv?.peer?.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2)}</div>`:""}
+        <div class="msg-row ${mine?"mine":""}">
+          ${!mine?`<div class="avatar" style="width:26px;height:26px;font-size:10px;cursor:pointer;"
+                       onclick="goToPeerProfile()">${ini}</div>`:""}
           <div>
-            <div class="bubble ${mine?'mine':'theirs'}">${escapeHtml(m.body)}</div>
+            ${fileMatch ? `
+              <div class="bubble ${mine?"mine":"theirs"}" style="padding:6px 10px;">
+                <div class="msg-file" onclick="downloadFile(${fileMatch[2]},'${escapeHtml(fileMatch[1])}')">
+                  <i class="ti ti-file"></i>
+                  <div class="file-meta">
+                    <span>${escapeHtml(fileMatch[1])}</span>
+                    <span style="font-size:11px;color:var(--text-3);">Click to download</span>
+                  </div>
+                </div>
+              </div>` :
+              `<div class="bubble ${mine?"mine":"theirs"}">${escapeHtml(m.body)}</div>`}
             <div class="bubble-time">${t}</div>
           </div>
         </div>`;
@@ -526,19 +546,55 @@ async function openConv(peerId) {
         sender_id:getUserId(), receiver_id:activeConv.peer.id, body
       })});
       await loadMessages(activeConv.peer.id);
-      // Update preview in sidebar
       const c = conversations.find(x=>x.peer?.id===activeConv.peer.id);
       if (c) { c.last_message=body; c.last_time=new Date().toISOString(); }
       renderConvs(conversations);
     } catch(e) {}
   }
 
-  function viewPeerProfile() {
+  function goToPeerProfile() {
     if (activeConv?.peer?.id) window.location.href=`/profile.html?id=${activeConv.peer.id}`;
   }
 
+  function toggleMenu(e) {
+    e.stopPropagation();
+    document.getElementById("chat-menu").classList.toggle("hidden");
+  }
+  document.addEventListener("click", () => document.getElementById("chat-menu")?.classList.add("hidden"));
+
+  function clearConversation() {
+    document.getElementById("chat-menu").classList.add("hidden");
+    if (!activeConv) return;
+    document.getElementById("chat-messages").innerHTML =
+      `<div class="chat-empty"><i class="ti ti-message-2"></i><p>Conversation cleared.</p></div>`;
+  }
+
+  function triggerAttach() { document.getElementById("attach-file-input").click(); }
+
+  async function sendAttachment(input) {
+    const file = input.files[0];
+    if (!file) return;
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("user_id", getUserId());
+      const uploadRes = await fetch(`${API_BASE}/files/upload`,{
+        method:"POST", headers:{"Authorization":`Bearer ${getToken()}`}, body:fd
+      });
+      const uploaded = await uploadRes.json();
+      const body = `📎 ${file.name} [file_id:${uploaded.file_id}]`;
+      await apiFetch("/messages/",{method:"POST",body:JSON.stringify({
+        sender_id:getUserId(), receiver_id:activeConv.peer.id, body
+      })});
+      await loadMessages(activeConv.peer.id);
+      showToast("File sent", "success");
+    } catch(e) { showToast("Could not send file.", "error"); }
+    input.value = "";
+  }
+
   function escapeHtml(s) {
-    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");
+    if (!s) return "";
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   }
 
   function timeAgo(s) {
@@ -550,176 +606,25 @@ async function openConv(peerId) {
     return new Date(s).toLocaleDateString([],{month:"short",day:"numeric"});
   }
 
-
-  
-/* ── Navigation profil ─────────────────────────────────── */
-function goToPeerProfile() {
-  if (activeConv?.peer?.id) {
-    window.location.href = `/profile.html?id=${activeConv.peer.id}`;
+  function showToast(msg, type="success") {
+    const map={success:["ti-circle-check","toast-success"],error:["ti-alert-circle","toast-error"],info:["ti-info-circle","toast-info"]};
+    const [icon,cls]=map[type]||map.info;
+    const t=document.createElement("div");
+    t.className=`toast ${cls}`;
+    t.innerHTML=`<i class="ti ${icon}"></i> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),3500);
   }
-}
-
-/* ── Menu 3 points ─────────────────────────────────────── */
-function toggleMenu(e) {
-  e.stopPropagation();
-  const menu = document.getElementById("chat-menu");
-  menu.classList.toggle("hidden");
-}
-
-// Fermer le menu si on clique ailleurs
-document.addEventListener("click", () => {
-  document.getElementById("chat-menu")?.classList.add("hidden");
-});
-
-function clearConversation() {
-  document.getElementById("chat-menu").classList.add("hidden");
-  if (!activeConv) return;
-  if (!confirm("Clear this conversation? Messages will only be removed from your view.")) return;
-  document.getElementById("chat-messages").innerHTML =
-    `<div class="chat-empty"><i class="ti ti-message-2"></i><p>Conversation cleared.</p></div>`;
-}
-
-function blockUser() {
-  document.getElementById("chat-menu").classList.add("hidden");
-  showToast("Block feature coming soon.", "info");
-}
-
-/* ── Pièces jointes ─────────────────────────────────────── */
-function triggerAttach() {
-  document.getElementById("attach-file-input").click();
-}
-
-async function sendAttachment(input) {
-  const file = input.files[0];
-  if (!file) return;
-
-  // Afficher un message optimiste immédiatement
-  const tempId = Date.now();
-  appendLocalMessage({
-    from: getUserId(),
-    body: `__FILE__:${file.name}:${file.size}`,
-    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    tempId,
-  });
-
-  try {
-    // 1. Uploader le fichier
-    const fd = new FormData();
-    fd.append("file",    file);
-    fd.append("user_id", getUserId());
-    const uploadRes = await fetch(`${API_BASE}/files/upload`, {
-      method:  "POST",
-      headers: { "Authorization": `Bearer ${getToken()}` },
-      body:    fd,
-    });
-    const uploaded = await uploadRes.json();
-
-    // 2. Envoyer un message texte avec référence au fichier
-    const body = `📎 ${file.name} [file_id:${uploaded.file_id}]`;
-    await apiFetch("/messages/", {
-      method: "POST",
-      body:   JSON.stringify({
-        sender_id:   getUserId(),
-        receiver_id: activeConv.peer.id,
-        body,
-      }),
-    });
-
-    showToast("File sent successfully", "success");
-  } catch(e) {
-    showToast("Could not send file.", "error");
-  }
-
-  // Réinitialiser l'input
-  input.value = "";
-}
-
-function renderMessages(msgs) {
-  if (!msgs.length) {
-    return `<div class="chat-empty"><i class="ti ti-message-2"></i><p>No messages yet. Say hello!</p></div>`;
-  }
-
-  let html = "";
-  let lastDate = "";
-
-  msgs.forEach(m => {
-    const d = new Date(m.created_at).toLocaleDateString("en-US", {
-      weekday: "long", month: "short", day: "numeric"
-    });
-    if (d !== lastDate) {
-      html += `<div class="day-sep">${d}</div>`;
-      lastDate = d;
-    }
-
-    const mine = m.sender_id === getUserId();
-    const t    = new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const ini  = (activeConv?.peer?.full_name || "?").split(" ").map(x => x[0]).join("").toUpperCase().slice(0, 2);
-
-    // Détecter les messages avec fichier joint
-    const fileMatch = m.body.match(/📎 (.+) \[file_id:(\d+)\]/);
-
-    html += `
-      <div class="msg-row ${mine ? "mine" : ""}">
-        ${!mine ? `<div class="avatar" style="width:26px;height:26px;font-size:10px;cursor:pointer;"
-                        onclick="goToPeerProfile()">${ini}</div>` : ""}
-        <div>
-          ${fileMatch ? `
-            <div class="bubble ${mine ? "mine" : "theirs"}" style="padding:6px 10px;">
-              <div class="msg-file" onclick="downloadFile(${fileMatch[2]}, '${escapeHtml(fileMatch[1])}')">
-                <i class="ti ti-file"></i>
-                <div class="file-meta">
-                  <span>${escapeHtml(fileMatch[1])}</span>
-                  <span style="font-size:11px;color:var(--text-3);">Click to download</span>
-                </div>
-                <i class="ti ti-download" style="margin-left:auto;font-size:14px;"></i>
-              </div>
-            </div>` : `
-            <div class="bubble ${mine ? "mine" : "theirs"}">${escapeHtml(m.body)}</div>`}
-          <div class="bubble-time">${t}</div>
-        </div>
-      </div>`;
-  });
-
-  return html;
-}
-
-/* ── Helper pour ajouter un message local immédiatement ── */
-function appendLocalMessage({ from, body, time, tempId }) {
-  const container = document.getElementById("chat-messages");
-  const mine = from === getUserId();
-  const fileMatch = body.match(/__FILE__:(.+):(\d+)/);
-  const div = document.createElement("div");
-  div.className = `msg-row ${mine ? "mine" : ""}`;
-  div.id = `temp-${tempId}`;
-  div.innerHTML = `
-    <div>
-      ${fileMatch ? `
-        <div class="bubble ${mine ? "mine" : "theirs"}" style="padding:6px 10px;">
-          <div class="msg-file">
-            <i class="ti ti-file"></i>
-            <div class="file-meta">
-              <span>${escapeHtml(fileMatch[1])}</span>
-              <span style="font-size:11px;color:var(--text-3);">Uploading...</span>
-            </div>
-          </div>
-        </div>` : `
-        <div class="bubble ${mine ? "mine" : "theirs"}">${escapeHtml(body)}</div>`}
-      <div class="bubble-time">${time}</div>
-    </div>`;
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-}
 
   init();
 </script>
 
-<!-- post.html, post-create.html, chat.html, repo-detail.html → aucune active -->
 <nav class="bottom-nav">
-  <a href="/"><i class="ti ti-home"></i> Feed</a>
-  <a href="/repositories.html"><i class="ti ti-folder"></i> Repos</a>
-  <a href="/post-create.html"><i class="ti ti-plus"></i> Post</a>
-  <a href="/notifications.html"><i class="ti ti-bell"></i> Alerts</a>
-  <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
+  <a href="/"><i class="ti ti-home"></i>Feed</a>
+  <a href="/repositories.html"><i class="ti ti-folder"></i>Repos</a>
+  <a href="/post-create.html"><i class="ti ti-plus"></i>Publish</a>
+  <a href="/notifications.html"><i class="ti ti-bell"></i>Alerts</a>
+  <a href="/profile.html"><i class="ti ti-user"></i>Profile</a>
 </nav>
 </body>
 </html>
