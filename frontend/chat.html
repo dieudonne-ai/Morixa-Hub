@@ -271,6 +271,37 @@
 
 /* Masquer le bouton retour sur desktop */
 .chat-back-btn { display: none; }
+
+@media (max-width: 768px) {
+  #active-chat {
+    background: var(--bg) !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chat-messages {
+    background: var(--bg) !important;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .chat-input-bar {
+    background: var(--surface) !important;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  /* S'assurer que le chat est visible quand on l'ouvre */
+  #active-chat[style*="flex"] {
+    background: var(--bg) !important;
+  }
+
+  /* Zone de saisie — éviter zoom iOS */
+  .chat-input-bar input {
+    font-size: 16px !important;
+    background: var(--surface-2);
+    color: var(--text-1);
+  }
   </style>
 </head>
 <body class="full-height">
@@ -375,7 +406,7 @@
     </div>
   </section>
 
-  
+
 </div>
 
 <script src="api.js"></script>

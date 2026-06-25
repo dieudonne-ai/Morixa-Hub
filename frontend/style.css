@@ -587,6 +587,18 @@ option { background: var(--surface-2); color: var(--text-1); }
   .row-2 { grid-template-columns: 1fr; }
 }
 
+
+@media (max-width: 768px) {
+  /* Masquer UNIQUEMENT les labels texte, PAS les compteurs */
+  .action-btn .btn-label { display: none; }
+
+  /* Garder les compteurs visibles */
+  .action-btn .btn-count { display: inline; }
+
+  /* Réduire la taille des boutons */
+  .action-btn { padding: 5px 8px; font-size: 11px; }
+}
+
 /* Mobile */
 @media (max-width: 768px) {
   /* Navbar */
@@ -798,4 +810,52 @@ option { background: var(--surface-2); color: var(--text-1); }
   .card { padding: 14px; }
   .btn-sm { padding: 5px 10px; font-size: 11px; }
   .row-2 { grid-template-columns: 1fr !important; }
+}
+
+
+.verif-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  letter-spacing: 0.01em;
+}
+
+/* Aucun badge */
+.badge-none {
+  background: var(--surface-3);
+  color: var(--text-3);
+  border-color: var(--border-2);
+}
+
+/* Email institutionnel détecté */
+.badge-email {
+  background: var(--tag-res-bg);
+  color: var(--tag-res-fg);
+  border-color: var(--tag-res-bdr);
+}
+
+/* En attente de review */
+.badge-document {
+  background: var(--tag-proto-bg);
+  color: var(--tag-proto-fg);
+  border-color: var(--tag-proto-bdr);
+}
+
+/* Médecin vérifié — VERT */
+.badge-verified {
+  background: #0a1a10;
+  color: #4ade80;
+  border-color: #166534;
+}
+
+/* Vérifié au registre officiel */
+.badge-registry {
+  background: var(--surface-3);
+  color: var(--accent);
+  border-color: var(--border-3);
 }
