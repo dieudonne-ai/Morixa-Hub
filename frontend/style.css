@@ -589,15 +589,45 @@ option { background: var(--surface-2); color: var(--text-1); }
 
 
 @media (max-width: 768px) {
-  /* Masquer UNIQUEMENT les labels texte, PAS les compteurs */
-  .action-btn .btn-label { display: none; }
+  #active-chat {
+    background: var(--bg) !important;
+    display: flex;
+    flex-direction: column;
+  }
 
-  /* Garder les compteurs visibles */
-  .action-btn .btn-count { display: inline; }
+  .chat-messages {
+    background: var(--bg) !important;
+    flex: 1;
+    overflow-y: auto;
+  }
 
-  /* Réduire la taille des boutons */
-  .action-btn { padding: 5px 8px; font-size: 11px; }
+  .chat-input-bar {
+    background: var(--surface) !important;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  /* S'assurer que le chat est visible quand on l'ouvre */
+  #active-chat[style*="flex"] {
+    background: var(--bg) !important;
+  }
+
+  /* Zone de saisie — éviter zoom iOS */
+  .chat-input-bar input {
+    font-size: 16px !important;
+    background: var(--surface-2);
+    color: var(--text-1);
+  }
+
+  /* Leaderboard mobile — affiché en bas du feed */
+  .mobile-leaderboard {
+    display: block !important;
+    margin-top: 8px;
+  }
 }
+
+/* Masqué sur desktop (le leaderboard est dans la sidebar droite) */
+.mobile-leaderboard { display: none; }
 
 /* Mobile */
 @media (max-width: 768px) {

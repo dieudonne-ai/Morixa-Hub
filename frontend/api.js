@@ -314,16 +314,19 @@ async function downloadFile(fileId, fileName) {
   }
 }
 
+
 function renderVerifBadge(level) {
   const badges = {
-    none:     { icon: "ti-user-question", label: "Unverified",         cls: "badge-none"     },
-    email:    { icon: "ti-mail-check",    label: "Email Verified",      cls: "badge-email"    },
-    document: { icon: "ti-clock",         label: "Verification Pending", cls: "badge-document" },
-    verified: { icon: "ti-shield-check",  label: "Verified Physician",  cls: "badge-verified" },
-    registry: { icon: "ti-certificate",   label: "Registry Verified",   cls: "badge-registry" },
+    none:     { icon: "ti-user-question", label: "Unverified",          cls: "badge-none"     },
+    email:    { icon: "ti-mail-check",    label: "Email Verified",       cls: "badge-email"    },
+    document: { icon: "ti-clock",         label: "Pending Review",       cls: "badge-document" },
+    verified: { icon: "ti-shield-check",  label: "Verified Physician",   cls: "badge-verified" },
+    registry: { icon: "ti-certificate",   label: "Registry Verified",    cls: "badge-registry" },
   };
   const b = badges[level] || badges.none;
-  return `<span class="verif-badge ${b.cls}"><i class="ti ${b.icon}"></i>${b.label}</span>`;
+  return `<span class="verif-badge ${b.cls}">
+    <i class="ti ${b.icon}"></i>${b.label}
+  </span>`;
 }
 
 

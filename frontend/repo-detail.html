@@ -367,31 +367,56 @@ async function starRepo() {
     document.getElementById("file-preview").textContent = `Selected: ${f.name} (${formatSize(f.size)})`;
   }
 
-  async function uploadFile() {
-    const input = document.getElementById("file-input");
-    if (!input.files.length) return alert("Please select a file.");
-    const bar = document.getElementById("upload-bar");
-    bar.classList.remove("hidden");
-    document.getElementById("upload-fill").style.width = "60%";
-    try {
-      const fd = new FormData();
-      fd.append("file", input.files[0]);
-      fd.append("user_id", getUserId());
-      fd.append("repo_id", repoId);
-      const res  = await fetch("http://localhost:5000/api/files/upload", {
-        method:"POST", headers:{"Authorization":`Bearer ${getToken()}`}, body:fd
-      });
-      const data = await res.json();
-      document.getElementById("upload-fill").style.width = "100%";
-      setTimeout(async () => {
-        closeUpload();
-        bar.classList.add("hidden");
-        const repo = await apiFetch(`/repos/${repoId}`);
-        allFiles   = repo.files || [];
-        renderFiles(allFiles);
-      }, 500);
-    } catch(e) { alert("Upload failed."); bar.classList.add("hidden"); }
+async function uploadFile() {
+  const input = document.getElementById("file-input");
+  if (!input.files.length) return alert("Please select a file.");
+
+  const bar  = document.getElementById("upload-bar");
+  const fill = document.getElementById("upload-fill");
+  bar.classList.remove("hidden");
+  fill.style.width = "30%";
+
+  try {
+    const fd = new FormData();
+    fd.append("file",    input.files[0]);
+    fd.append("user_id", getUserId());
+    fd.append("repo_id", repoId);
+
+    // ← Utilise API_BASE au lieu de localhost hardcodé
+    const res  = await fetch(`${API_BASE}/files/upload`, {
+      method:  "POST",
+      headers: { "Authorization": `Bearer ${getToken()}` },
+      body:    fd,
+    });
+
+    fill.style.width = "80%";
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Upload failed" }));
+      throw err;
+    }
+
+    fill.style.width = "100%";
+
+    setTimeout(async () => {
+      closeUpload();
+      bar.classList.add("hidden");
+      fill.style.width = "0%";
+      // Recharger la liste des fichiers
+      const repo = await apiFetch(`/repos/${repoId}?viewer_id=${getUserId()}`);
+      allFiles   = repo.files || [];
+      renderFiles(allFiles);
+      showToast("File uploaded successfully!", "success");
+    }, 500);
+
+  } catch(e) {
+    bar.classList.add("hidden");
+    fill.style.width = "0%";
+    showToast(e.error || "Upload failed. Please try again.", "error");
   }
+
+  input.value = "";
+}
 
   function formatSize(b) {
     if (b > 1048576) return (b/1048576).toFixed(1)+" MB";

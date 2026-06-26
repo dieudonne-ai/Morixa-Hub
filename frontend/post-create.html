@@ -464,7 +464,7 @@ async function submitPost() {
       fd.append("file", f);
       fd.append("user_id", getUserId());
       fd.append("post_id", post.id);
-      await fetch("http://localhost:5000/api/files/upload", {
+      await fetch(`${API_BASE}/api/files/upload`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${getToken()}` },
         body: fd
