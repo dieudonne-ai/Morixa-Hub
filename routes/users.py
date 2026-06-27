@@ -1,7 +1,3 @@
-
-# ============================================================
-# routes/users.py
-# ============================================================
 from flask import Blueprint, request, jsonify
 from models import db, User, PointsLog, Notification
 
@@ -59,3 +55,31 @@ def mark_notif_read(nid):
     n.is_read = True
     db.session.commit()
     return jsonify({"message": "Marked as read"})
+
+@users_bp.get("/search")
+def search_users():
+    """Recherche de médecins par nom, spécialité ou hôpital."""
+    q        = request.args.get("q", "").strip()
+    page     = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+
+    if not q:
+        return jsonify({"users": [], "total": 0})
+
+    results = User.query.filter(
+        User.full_name.ilike(f"%{q}%") |
+        User.specialty.ilike(f"%{q}%")  |
+        User.hospital.ilike(f"%{q}%")   |
+        User.country.ilike(f"%{q}%")
+    ).order_by(
+        User.total_points.desc()
+    ).paginate(page=page, per_page=per_page, error_out=False)
+
+    return jsonify({
+        "users": [{
+            **u.to_dict(),
+            "posts_count": len(u.posts),
+        } for u in results.items],
+        "total": results.total,
+        "pages": results.pages,
+    })

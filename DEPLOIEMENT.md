@@ -8,9 +8,13 @@
 2. Cliquez "New Project" → donnez un nom : `morixa-hub`
 3. Choisissez la région la plus proche (Europe ou Africa si disponible)
 4. Une fois créé, copiez la **Connection string** qui ressemble à :
+
    ```
+
+
    postgresql://username:password@ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require
    ```
+
 5. Gardez-la de côté, vous en aurez besoin dans les étapes suivantes.
 
 ---

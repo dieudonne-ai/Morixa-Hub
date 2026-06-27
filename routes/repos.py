@@ -1,7 +1,7 @@
-
 from flask import Blueprint, request, jsonify
-from models import db, Repository, File, User, RepoStar
+from models import db, Repository, File, User, RepoStar, Comment
 from services.points import award_points
+
 
 repos_bp = Blueprint("repos", __name__, url_prefix="/api/repos")
 
@@ -148,3 +148,41 @@ def _repo_dict(r, detail=False, viewer_id=None):
             "created_at": f.created_at.isoformat(),
         } for f in r.files]
     return d
+
+    
+@repos_bp.get("/<int:repo_id>/comments")
+def get_repo_comments(repo_id):
+    """Commentaires spécifiques à un dépôt."""
+    comments = Comment.query.filter_by(repo_id=repo_id)\
+                            .order_by(Comment.created_at.asc()).all()
+    return jsonify([{
+        "id":         c.id,
+        "body":       c.body,
+        "created_at": c.created_at.isoformat(),
+        "author": {
+            "id":        c.author.id,
+            "full_name": c.author.full_name,
+            "specialty": c.author.specialty,
+        } if c.author else {}
+    } for c in comments])
+
+
+@repos_bp.post("/<int:repo_id>/comments")
+def add_repo_comment(repo_id):
+    """Ajouter un commentaire à un dépôt (sans affecter les posts)."""
+    d       = request.get_json()
+    uid     = d.get("user_id")
+    comment = Comment(
+        repo_id = repo_id,     # ← repo_id, PAS post_id
+        post_id = None,        # ← explicitement NULL
+        user_id = uid,
+        body    = d["body"],
+    )
+    db.session.add(comment)
+
+    user = db.session.get(User, uid)
+    if user:
+        award_points(user, "commentaire", ref_type="repo", ref_id=repo_id)
+
+    db.session.commit()
+    return jsonify({"message": "Comment added", "id": comment.id}), 201

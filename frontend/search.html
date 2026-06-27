@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Morixa Hub — Search Physicians</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .page-wrap { max-width: 720px; margin: 0 auto; padding: 24px 20px; }
+
+    .search-hero {
+      text-align: center;
+      padding: 32px 20px;
+      margin-bottom: 24px;
+    }
+    .search-hero h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text-1);
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .search-hero p { font-size: 14px; color: var(--text-3); }
+
+    .search-big {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      transition: border-color 0.12s;
+    }
+    .search-big:focus-within { border-color: var(--border-3); }
+    .search-big i { font-size: 20px; color: var(--text-3); flex-shrink: 0; }
+    .search-big input {
+      flex: 1; border: none; background: transparent;
+      font-size: 16px; color: var(--text-1);
+      font-family: var(--font); outline: none;
+    }
+    .search-big input::placeholder { color: var(--text-3); }
+
+    /* Filtres spécialité */
+    .specialty-filters {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    /* Résultats */
+    .results-header {
+      font-size: 12px; color: var(--text-3);
+      font-family: var(--mono);
+      margin-bottom: 12px;
+    }
+
+    .user-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: border-color 0.12s;
+      margin-bottom: 10px;
+    }
+    .user-card:hover { border-color: var(--border-2); }
+
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 14px; font-weight: 600; color: var(--text-1); }
+    .user-meta { font-size: 12px; color: var(--text-3); margin-top: 3px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .user-meta span { display: flex; align-items: center; gap: 4px; }
+
+    .user-stats {
+      display: flex; flex-direction: column;
+      align-items: flex-end; gap: 6px; flex-shrink: 0;
+    }
+    .user-pts { font-size: 12px; font-family: var(--mono); color: var(--tag-art-fg); }
+
+    /* Empty / loading */
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--text-3); }
+    .empty-state i { font-size: 44px; display: block; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    @media (max-width: 768px) {
+      .search-hero { padding: 16px; }
+      .search-hero h1 { font-size: 18px; }
+      .page-wrap { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">
+    <div class="logo-box"><i class="ti ti-stethoscope"></i></div>
+    Morixa Hub
+  </a>
+  <div class="nav-links">
+    <a href="/"><i class="ti ti-home"></i> Feed</a>
+    <a href="/repositories.html"><i class="ti ti-folder"></i> Repos</a>
+    <a href="/search.html" class="active"><i class="ti ti-search"></i> Search</a>
+    <a href="/notifications.html"><i class="ti ti-bell"></i> Alerts</a>
+    <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+  <div class="search-hero">
+    <h1>Find Physicians</h1>
+    <p>Search by name, specialty, hospital or country</p>
+  </div>
+
+  <!-- Barre de recherche -->
+  <div class="search-big">
+    <i class="ti ti-search"></i>
+    <input type="text" id="search-input"
+           placeholder="Dr. Ndiaye, Cardiology, Mulago Hospital..."
+           oninput="debounceSearch()"
+           autofocus>
+    <button class="btn btn-sm" onclick="clearSearch()" id="clear-btn" style="display:none;">
+      <i class="ti ti-x"></i>
+    </button>
+  </div>
+
+  <!-- Filtres rapides par spécialité -->
+  <div class="specialty-filters">
+    <button class="filter-btn active" onclick="filterSpecialty(this,'')">All</button>
+    <button class="filter-btn" onclick="filterSpecialty(this,'Cardiology')">Cardiology</button>
+    <button class="filter-btn" onclick="filterSpecialty(this,'Pediatrics')">Pediatrics</button>
+    <button class="filter-btn" onclick="filterSpecialty(this,'Neurology')">Neurology</button>
+    <button class="filter-btn" onclick="filterSpecialty(this,'Infectious Diseases')">Infections</button>
+    <button class="filter-btn" onclick="filterSpecialty(this,'Emergency Medicine')">Emergency</button>
+    <button class="filter-btn" onclick="filterSpecialty(this,'Internal Medicine')">Internal Med.</button>
+  </div>
+
+  <!-- Header résultats -->
+  <div class="results-header" id="results-header" style="display:none;"></div>
+
+  <!-- Résultats -->
+  <div id="results-container">
+    <div class="empty-state">
+      <i class="ti ti-stethoscope"></i>
+      <p>Search for a physician by name,<br>specialty or hospital</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom nav mobile -->
+<nav class="bottom-nav">
+  <a href="/"><i class="ti ti-home"></i>Feed</a>
+  <a href="/repositories.html"><i class="ti ti-folder"></i>Repos</a>
+  <a href="/search.html" class="active"><i class="ti ti-search"></i>Search</a>
+  <a href="/notifications.html"><i class="ti ti-bell"></i>Alerts</a>
+  <a href="/profile.html"><i class="ti ti-user"></i>Profile</a>
+</nav>
+
+<script src="/api.js"></script>
+<script>
+  let searchTimer   = null;
+  let currentSpec   = "";
+  let currentQuery  = "";
+
+  async function doSearch(query, specialty) {
+    const container = document.getElementById("results-container");
+    const header    = document.getElementById("results-header");
+
+    if (!query && !specialty) {
+      header.style.display = "none";
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="ti ti-stethoscope"></i>
+          <p>Search for a physician by name,<br>specialty or hospital</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = skeletons(3);
+
+    try {
+      const params = new URLSearchParams({ per_page: 20 });
+      if (query)    params.set("q", query);
+      if (specialty) params.set("q", (query ? query + " " : "") + specialty);
+
+      const data = await apiFetch(`/users/search?${params}`);
+
+      // Filtrer soi-même
+      const users = (data.users || []).filter(u => u.id !== getUserId());
+
+      header.style.display = "block";
+      header.textContent   = users.length
+        ? `${data.total} physician${data.total > 1 ? "s" : ""} found`
+        : "No results";
+
+      if (!users.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="ti ti-user-off"></i>
+            <p>No physician found for "<strong>${query || specialty}</strong>"</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = users.map(u => {
+        const ini = (u.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2);
+        return `
+          <div class="user-card" onclick="window.location='/profile.html?id=${u.id}'">
+            <div class="avatar" style="width:46px;height:46px;font-size:15px;">${ini}</div>
+            <div class="user-info">
+              <div class="user-name">Dr. ${u.full_name||"Unknown"}
+                ${u.verif_level === "verified" || u.verif_level === "registry"
+                  ? `<span class="verif-badge badge-verified" style="margin-left:6px;font-size:10px;">
+                       <i class="ti ti-shield-check"></i>Verified
+                     </span>`
+                  : ""}
+              </div>
+              <div class="user-meta">
+                ${u.specialty ? `<span><i class="ti ti-stethoscope"></i>${u.specialty}</span>` : ""}
+                ${u.hospital  ? `<span><i class="ti ti-building-hospital"></i>${u.hospital}</span>`  : ""}
+                ${u.country   ? `<span><i class="ti ti-map-pin"></i>${u.country}</span>`   : ""}
+              </div>
+            </div>
+            <div class="user-stats">
+              <span class="user-pts">${(u.total_points||0).toLocaleString()} pts</span>
+              <span style="font-size:11px;color:var(--text-3);">${u.level||"Intern"}</span>
+              <button class="btn btn-sm" onclick="event.stopPropagation();
+                window.location='/chat.html?peer=${u.id}'">
+                <i class="ti ti-message"></i>
+              </button>
+            </div>
+          </div>`;
+      }).join("");
+
+    } catch(e) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="ti ti-wifi-off"></i>
+          <p>Search unavailable. Please try again.</p>
+        </div>`;
+    }
+  }
+
+  function debounceSearch() {
+    const q    = document.getElementById("search-input").value.trim();
+    currentQuery = q;
+    document.getElementById("clear-btn").style.display = q ? "flex" : "none";
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => doSearch(currentQuery, currentSpec), 350);
+  }
+
+  function filterSpecialty(btn, spec) {
+    document.querySelectorAll(".specialty-filters .filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentSpec = spec;
+    doSearch(currentQuery, currentSpec);
+  }
+
+  function clearSearch() {
+    document.getElementById("search-input").value = "";
+    currentQuery = "";
+    document.getElementById("clear-btn").style.display = "none";
+    doSearch("", currentSpec);
+  }
+
+  function skeletons(n) {
+    return Array(n).fill(`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);
+                  padding:16px;display:flex;gap:14px;margin-bottom:10px;">
+        <div class="skeleton" style="width:46px;height:46px;border-radius:50%;flex-shrink:0;"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+          <div class="skeleton" style="height:13px;width:40%;"></div>
+          <div class="skeleton" style="height:11px;width:65%;"></div>
+        </div>
+      </div>`).join("");
+  }
+
+  // Lire ?q= dans l'URL (depuis le feed ou la navbar)
+  const urlQ = new URLSearchParams(window.location.search).get("q");
+  if (urlQ) {
+    document.getElementById("search-input").value = urlQ;
+    currentQuery = urlQ;
+    document.getElementById("clear-btn").style.display = "flex";
+    doSearch(urlQ, "");
+  }
+</script>
+</body>
+</html>

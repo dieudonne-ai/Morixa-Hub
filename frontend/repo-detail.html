@@ -282,41 +282,47 @@ function renderFiles(files) {
     renderFiles(allFiles.filter(f => f.file_name.toLowerCase().includes(q)));
   }
 
-  async function loadComments() {
-    try {
-      const data = await apiFetch(`/posts/${repoId}/comments`).catch(()=>[]);
-      document.getElementById("comment-count-label").textContent = `(${data.length})`;
-      if (!data.length) {
-        document.getElementById("comments-list").innerHTML =
-          `<div style="color:var(--text-3);font-size:13px;padding:8px 0;">No comments yet — start the discussion.</div>`;
-        return;
-      }
-      document.getElementById("comments-list").innerHTML = data.map(c => {
-        const ini = (c.author?.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2);
-        return `
-          <div class="comment-item">
-            <div class="avatar">${ini}</div>
-            <div class="comment-body">
-              <div class="comment-author">
-                Dr. ${c.author?.full_name||"Unknown"}
-                <span class="comment-time">${timeAgo(c.created_at)}</span>
-              </div>
-              <div class="comment-text">${c.body}</div>
+async function loadComments() {
+  try {
+    const data = await apiFetch(`/repos/${repoId}/comments`);  // ← /repos/ pas /posts/
+    document.getElementById("comment-count-label").textContent = `(${data.length})`;
+    if (!data.length) {
+      document.getElementById("comments-list").innerHTML =
+        `<div style="color:var(--text-3);font-size:13px;padding:8px 0;">
+          No comments yet — start the discussion.
+        </div>`;
+      return;
+    }
+    document.getElementById("comments-list").innerHTML = data.map(c => {
+      const ini = (c.author?.full_name||"?").split(" ").map(x=>x[0]).join("").toUpperCase().slice(0,2);
+      return `
+        <div class="comment-item">
+          <div class="avatar">${ini}</div>
+          <div class="comment-body">
+            <div class="comment-author">
+              Dr. ${c.author?.full_name||"Unknown"}
+              <span class="comment-time">${timeAgo(c.created_at)}</span>
             </div>
-          </div>`;
-      }).join("");
-    } catch(e) {}
-  }
+            <div class="comment-text">${c.body}</div>
+          </div>
+        </div>`;
+    }).join("");
+  } catch(e) {}
+}
 
-  async function submitComment() {
-    const body = document.getElementById("comment-input").value.trim();
-    if (!body) return;
-    try {
-      await apiFetch(`/posts/${repoId}/comment`,{method:"POST",body:JSON.stringify({user_id:getUserId(),body})});
-      document.getElementById("comment-input").value = "";
-      await loadComments();
-    } catch(e) { alert("Could not post comment."); }
-  }
+async function submitComment() {
+  const body = document.getElementById("comment-input").value.trim();
+  if (!body) return;
+  try {
+    await apiFetch(`/repos/${repoId}/comments`, {  // ← /repos/ pas /posts/
+      method: "POST",
+      body:   JSON.stringify({ user_id: getUserId(), body }),
+    });
+    document.getElementById("comment-input").value = "";
+    await loadComments();
+    showToast("+5 pts earned", "success");
+  } catch(e) { alert("Could not post comment."); }
+}
 
 async function starRepo() {
   const btn = document.getElementById("star-btn");

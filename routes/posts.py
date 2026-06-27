@@ -137,3 +137,35 @@ def delete_post(pid):
     db.session.delete(post)
     db.session.commit()
     return jsonify({"message": "Post deleted"})
+
+@posts_bp.put("/<int:pid>")
+def update_post(pid):
+    """Modifier un post (titre, corps, spécialité)."""
+    post = Post.query.get_or_404(pid)
+    d    = request.get_json()
+    uid  = d.get("user_id")
+
+    # Vérifier que c'est bien l'auteur
+    if post.user_id != uid:
+        return jsonify({"error": "Not authorized"}), 403
+
+    post.title     = d.get("title",    post.title)
+    post.body      = d.get("body",     post.body)
+    post.specialty = d.get("specialty", post.specialty)
+    db.session.commit()
+    return jsonify(post.to_dict())
+
+
+@posts_bp.delete("/<int:pid>")
+def delete_post(pid):
+    """Supprimer un post (auteur seulement)."""
+    post = Post.query.get_or_404(pid)
+    d    = request.get_json() or {}
+    uid  = d.get("user_id")
+
+    if post.user_id != uid:
+        return jsonify({"error": "Not authorized"}), 403
+
+    db.session.delete(post)
+    db.session.commit()
+    return jsonify({"message": "Post deleted"})    

@@ -260,10 +260,19 @@
                   <button class="btn btn-sm" onclick="messageAuthor(${author.id})">
                     <i class="ti ti-message"></i> Message
                     </button>` : ""}
-                </div>
+              </div>
+
+              ${author.id === getUserId() ? `
+              <div style="display:flex;gap:6px;margin-bottom:12px;">
+                <button class="btn btn-sm" onclick="showEditPost()">
+                  <i class="ti ti-edit"></i> Edit
+                  </button>
+                  <button class="btn btn-sm btn-danger" onclick="deletePost()">
+                    <i class="ti ti-trash"></i> Delete
+                    </button>
+                    </div>` : ""}
 
           <div class="post-body-text">${escapeHtml(p.body)}</div>
-
           <div class="action-bar">
             <button class="action-btn ${liked?'liked':''}" id="like-btn" onclick="likePost()">
               <i class="ti ${liked?'ti-heart-filled':'ti-heart'}"></i>
@@ -502,6 +511,55 @@ async function downloadFile(fileId, fileName) {
   }
 }
 
+function showEditPost() {
+  if (!post) return;
+  document.getElementById("edit-post-title").value    = post.title || "";
+  document.getElementById("edit-post-body").value     = post.body  || "";
+  document.getElementById("edit-post-specialty").value = post.specialty || "";
+  document.getElementById("edit-post-modal").classList.remove("hidden");
+}
+
+function closeEditPost() {
+  document.getElementById("edit-post-modal").classList.add("hidden");
+}
+
+async function saveEditPost() {
+  const title     = document.getElementById("edit-post-title").value.trim();
+  const body      = document.getElementById("edit-post-body").value.trim();
+  const specialty = document.getElementById("edit-post-specialty").value;
+
+  if (!title || !body) return showToast("Title and content are required.", "error");
+
+  try {
+    const updated = await apiFetch(`/posts/${postId}`, {
+      method: "PUT",
+      body:   JSON.stringify({ user_id: getUserId(), title, body, specialty }),
+    });
+    post = updated;
+    closeEditPost();
+    // Mettre à jour l'affichage sans recharger la page
+    document.querySelector(".post-title-lg").textContent = updated.title;
+    document.querySelector(".post-body-text").textContent = updated.body;
+    showToast("Publication updated successfully", "success");
+  } catch(e) {
+    showToast(e.error || "Could not update post.", "error");
+  }
+}
+
+async function deletePost() {
+  if (!confirm("Delete this publication? This action cannot be undone.")) return;
+  try {
+    await apiFetch(`/posts/${postId}`, {
+      method: "DELETE",
+      body:   JSON.stringify({ user_id: getUserId() }),
+    });
+    showToast("Publication deleted", "success");
+    setTimeout(() => window.location.href = "/", 1200);
+  } catch(e) {
+    showToast(e.error || "Could not delete post.", "error");
+  }
+}
+
   init();
 </script>
 
@@ -512,5 +570,35 @@ async function downloadFile(fileId, fileName) {
   <a href="/notifications.html"><i class="ti ti-bell"></i>Alerts</a>
   <a href="/profile.html"><i class="ti ti-user"></i>Profile</a>
 </nav>
+
+<div class="modal hidden" id="edit-post-modal">
+  <div class="modal-box">
+    <div class="modal-title"><i class="ti ti-edit"></i> Edit publication</div>
+    <div class="field-group">
+      <label class="field-label">Title</label>
+      <input class="field-input" type="text" id="edit-post-title">
+    </div>
+    <div class="field-group" style="margin-top:12px;">
+      <label class="field-label">Specialty</label>
+      <select class="field-input" id="edit-post-specialty">
+        <option value="">Select...</option>
+        <option>Cardiology</option><option>Pediatrics</option>
+        <option>Neurology</option><option>Infectious Diseases</option>
+        <option>General Surgery</option><option>Internal Medicine</option>
+        <option>Emergency Medicine</option><option>Other</option>
+      </select>
+    </div>
+    <div class="field-group" style="margin-top:12px;">
+      <label class="field-label">Content</label>
+      <textarea class="field-input" id="edit-post-body" style="min-height:160px;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeEditPost()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditPost()">
+        <i class="ti ti-check"></i> Save changes
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
