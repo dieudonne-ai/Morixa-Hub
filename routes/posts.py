@@ -130,15 +130,6 @@ def get_comments(pid):
     } for c in comments])
 
 
-# ── Supprimer un post ────────────────────────────────────────
-@posts_bp.delete("/<int:pid>")
-def delete_post(pid):
-    post = Post.query.get_or_404(pid)
-    db.session.delete(post)
-    db.session.commit()
-    return jsonify({"message": "Post deleted"})
-
-
 @posts_bp.put("/<int:pid>")
 def update_post(pid):
     """Modifier un post (titre, corps, spécialité)."""
