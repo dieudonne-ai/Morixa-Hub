@@ -492,17 +492,21 @@ async function loadUnreadCounts() {
     setTimeout(()=>t.remove(),3500);
   }
 </script>
-
+<!-- index.html -->
 <nav class="bottom-nav">
   <a href="/" class="active"><i class="ti ti-home"></i>Feed</a>
   <a href="/repositories.html"><i class="ti ti-folder"></i>Repos</a>
-  <a href="/post-create.html"><i class="ti ti-plus"></i>Publish</a>
-  <a href="/notifications.html">
-    <i class="ti ti-bell"></i>
+  <a href="/search.html"><i class="ti ti-search"></i>Search</a>
+  <a href="/notifications.html"><i class="ti ti-bell"></i>
     <span class="bn-badge" id="bn-notif" style="display:none"></span>
     Alerts
   </a>
   <a href="/profile.html"><i class="ti ti-user"></i>Profile</a>
 </nav>
+
+<!-- Bouton flottant Publish (FAB) — visible sur mobile uniquement -->
+<a href="/post-create.html" class="fab-btn" title="New post">
+  <i class="ti ti-plus"></i>
+</a>
 </body>
 </html>

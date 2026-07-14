@@ -889,3 +889,37 @@ option { background: var(--surface-2); color: var(--text-1); }
   color: var(--accent);
   border-color: var(--border-3);
 }
+
+
+/* ── Bouton flottant Publish (FAB) ────────────────────────── */
+.fab-btn {
+  display: none;  /* masqué sur desktop */
+}
+
+@media (max-width: 768px) {
+  .fab-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 70px;    /* au-dessus de la bottom nav */
+    right: 16px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 24px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    z-index: 100;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .fab-btn:hover,
+  .fab-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+}

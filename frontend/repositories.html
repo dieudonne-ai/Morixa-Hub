@@ -158,14 +158,18 @@
     <div class="logo-box"><i class=""><img src="logo/logo.png" alt="" class="logo-box"></i></div>
     Morixa Hub
   </a>
-  <div class="nav-links">
-    <a href="/search.html"><i class="ti ti-search"></i> Search</a>
-    <a href="/"><i class="ti ti-home"></i> Feed</a>
-    <a href="/repositories.html" class="active"><i class="ti ti-folder"></i> Repositories</a>
-    <a href="/chat.html"><i class="ti ti-message"></i> Messages</a>
-    <a href="/notifications.html"><i class="ti ti-bell"></i> Notifications</a>
-    <a href="/profile.html"><i class="ti ti-user"></i> Profile</a>
-  </div>
+<div class="nav-links">
+  <a href="/" class="active"><i class="ti ti-home"></i> Feed</a>
+  <a href="/repositories.html"><i class="ti ti-folder"></i> Repositories</a>
+  <a href="/search.html"><i class="ti ti-search"></i> Search</a>      <!-- ← NOUVEAU -->
+  <a href="/chat.html"><i class="ti ti-message"></i> Messages
+    <span class="badge-count" id="msg-badge" style="display:none"></span>
+  </a>
+  <a href="/notifications.html"><i class="ti ti-bell"></i> Notifications
+    <span class="badge-count" id="notif-badge" style="display:none"></span>
+  </a>
+  <a href="/profile.html"><div class="nav-avatar" id="nav-avatar">?</div></a>
+</div>
 </nav>
 
 <div class="page-wrap">
@@ -398,12 +402,8 @@ async function toggleStar(id, btn) {
   init();
 </script>
 
-<nav class="bottom-nav">
-  <a href="/"><i class="ti ti-home"></i>Feed</a>
-  <a href="/repositories.html" class="active"><i class="ti ti-folder"></i>Repos</a>
-  <a href="/post-create.html"><i class="ti ti-plus"></i>Publish</a>
-  <a href="/notifications.html"><i class="ti ti-bell"></i>Alerts</a>
-  <a href="/profile.html"><i class="ti ti-user"></i>Profile</a>
-</nav>
+
+
+
 </body>
 </html>
