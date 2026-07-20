@@ -175,3 +175,13 @@ class VerificationRequest(db.Model):
     reviewer_note = db.Column(db.String(500))           # retour au médecin
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     reviewed_at   = db.Column(db.DateTime)
+
+    
+class PasswordReset(db.Model):
+    __tablename__ = "password_resets"
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    token      = db.Column(db.String(100), unique=True, nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used       = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
