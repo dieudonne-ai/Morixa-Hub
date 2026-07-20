@@ -1,36 +1,32 @@
-# ============================================================
-# routes/auth.py
-# ============================================================
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-import jwt, datetime
-from config import Config
-from models import db, User
-
-import secrets
-from datetime import datetime, timedelta
-from models import PasswordReset
+from models import db, User, PasswordReset
 from services.email import send_password_reset_email
-from werkzeug.security import generate_password_hash
+from datetime import datetime, timedelta
+import jwt
+import secrets
+import os
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
-@auth_bp.route("/register", methods=["POST"])
+
+@auth_bp.post("/register")
 def register():
-    data = request.get_json()
-    if User.query.filter_by(email=data["email"]).first():
-        return jsonify({"error": "Email déjà utilisé"}), 409
-    user = User(
-        full_name=data["full_name"],
-        email=data["email"],
-        password_hash=generate_password_hash(data["password"]),
-        specialty=data.get("specialty"),
-        hospital=data.get("hospital"),
-        country=data.get("country"),
+    d = request.get_json()
+    if User.query.filter_by(email=d["email"]).first():
+        return jsonify({"error": "Email already used"}), 409
+
+    u = User(
+        full_name     = d["full_name"],
+        email         = d["email"],
+        password_hash = generate_password_hash(d["password"]),
+        specialty     = d.get("specialty"),
+        hospital      = d.get("hospital"),
+        country       = d.get("country"),
     )
-    db.session.add(user)
+    db.session.add(u)
     db.session.commit()
-    return jsonify({"message": "Compte créé", "user": user.to_dict()}), 201
+    return jsonify({"message": "Account created", "user": u.to_dict()}), 201
 
 
 @auth_bp.post("/login")
@@ -40,10 +36,11 @@ def login():
     if not u or not check_password_hash(u.password_hash, d["password"]):
         return jsonify({"error": "Invalid credentials"}), 401
 
+    from config import Config
     token = jwt.encode(
         {
             "user_id": u.id,
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=Config.JWT_EXPIRES_HOURS)
+            "exp": datetime.utcnow() + timedelta(hours=Config.JWT_EXPIRES_HOURS)
         },
         Config.JWT_SECRET,
         algorithm="HS256"
@@ -58,7 +55,6 @@ def forgot_password():
 
     user = User.query.filter_by(email=email).first()
 
-    # Réponse identique que l'email existe ou non (sécurité — évite l'énumération)
     generic_response = jsonify({
         "message": "If an account exists with this email, a reset link has been sent."
     })
@@ -66,7 +62,6 @@ def forgot_password():
     if not user:
         return generic_response
 
-    # Invalider les anciens tokens non utilisés
     PasswordReset.query.filter_by(user_id=user.id, used=False).delete()
 
     token = secrets.token_urlsafe(32)
