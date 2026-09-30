@@ -121,6 +121,40 @@
       <button class="btn btn-primary" onclick="showUpload()">
         <i class="ti ti-upload"></i> Add file
       </button>
+      <button class="btn" id="edit-repo-btn" onclick="showEditRepo()" style="display:none;">
+        <i class="ti ti-edit"></i> Edit
+      </button>
+      <button class="btn" id="report-repo-btn" onclick="reportRepo()" style="display:none;">
+        <i class="ti ti-flag"></i> Report
+      </button>
+    </div>
+  </div>
+
+  <!-- Edit repo modal -->
+  <div class="modal hidden" id="edit-repo-modal">
+    <div class="modal-box">
+      <div class="modal-title"><i class="ti ti-edit"></i> Edit repository</div>
+      <div class="field-group">
+        <label class="field-label">Name</label>
+        <input class="field-input" type="text" id="edit-repo-name" maxlength="150">
+      </div>
+      <div class="field-group" style="margin-top:12px;">
+        <label class="field-label">Description</label>
+        <textarea class="field-input" id="edit-repo-desc" maxlength="500" style="min-height:100px;"></textarea>
+      </div>
+      <div class="field-group" style="margin-top:12px;">
+        <label class="field-label">Visibility</label>
+        <select class="field-input" id="edit-repo-visibility">
+          <option value="true">Public</option>
+          <option value="false">Private</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeEditRepo()">Cancel</button>
+        <button class="btn btn-primary" id="save-repo-edit-btn" onclick="saveRepoEdit()">
+          <i class="ti ti-check"></i> Save changes
+        </button>
+      </div>
     </div>
   </div>
 
@@ -239,6 +273,57 @@ function renderHeader(r) {
   // État réel du star, basé sur le backend (et plus un simple style local)
   isStarred = !!r.is_starred;
   updateStarBtn();
+
+  currentRepo = r;
+  const isOwner = r.owner?.id === getUserId();
+  document.getElementById("edit-repo-btn").style.display   = isOwner ? "" : "none";
+  document.getElementById("report-repo-btn").style.display = isOwner ? "none" : "";
+}
+
+let currentRepo = null;
+
+function showEditRepo() {
+  if (!currentRepo) return;
+  document.getElementById("edit-repo-name").value = currentRepo.name || "";
+  document.getElementById("edit-repo-desc").value  = currentRepo.description || "";
+  document.getElementById("edit-repo-visibility").value = currentRepo.is_public ? "true" : "false";
+  document.getElementById("edit-repo-modal").classList.remove("hidden");
+}
+
+function closeEditRepo() {
+  document.getElementById("edit-repo-modal").classList.add("hidden");
+}
+
+async function saveRepoEdit() {
+  const name = document.getElementById("edit-repo-name").value.trim();
+  if (!name) return showToast("Name cannot be empty.", "error");
+
+  const btn = document.getElementById("save-repo-edit-btn");
+  btn.disabled = true;
+  try {
+    const updated = await apiFetch(`/repos/${repoId}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        user_id: getUserId(),
+        name,
+        description: document.getElementById("edit-repo-desc").value.trim(),
+        is_public: document.getElementById("edit-repo-visibility").value === "true",
+      }),
+    });
+    currentRepo = { ...currentRepo, ...updated };
+    renderHeader(currentRepo);
+    closeEditRepo();
+    showToast("Repository updated.", "success");
+  } catch(e) {
+    showToast(e.error || "Could not update repository.", "error");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function reportRepo() {
+  if (!repoId) return;
+  openReportModal("repo", repoId);
 }
 
 function updateStarBtn() {

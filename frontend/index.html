@@ -162,9 +162,19 @@
         <a href="/post-create.html" class="btn btn-primary"><i class="ti ti-edit"></i> New post</a>
       </div>
 
+      <!-- Feed scope -->
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="filter-btn active" id="scope-btn-all" onclick="setFeedScope('all')">
+          <i class="ti ti-home"></i> For you
+        </button>
+        <button class="filter-btn" id="scope-btn-following" onclick="setFeedScope('following')">
+          <i class="ti ti-users"></i> Following
+        </button>
+      </div>
+
       <!-- Filters -->
       <div style="display:flex; gap:6px; flex-wrap:wrap;">
-        <button class="filter-btn active" onclick="setFilter(this,'')">All</button>
+        <button class="filter-btn active" id="type-btn-all" onclick="setFilter(this,'')">All</button>
         <button class="filter-btn" onclick="setFilter(this,'cas_clinique')">Clinical cases</button>
         <button class="filter-btn" onclick="setFilter(this,'protocole')">Protocols</button>
         <button class="filter-btn" onclick="setFilter(this,'recherche')">Research</button>
@@ -253,17 +263,26 @@
     try {
       const params = { page:currentPage, per_page:10 };
       if (currentFilter) params.type = currentFilter;
+      if (currentScope === "following") {
+        params.feed = "following";
+        params.viewer_id = getUserId();
+      }
       const q = document.getElementById("search-input").value.trim();
       if (q) params.search = q;
       const data = await apiFetch("/posts/?"+new URLSearchParams(params));
       totalPages = data.pages || 1;
       if (!append) document.getElementById("posts-container").innerHTML = "";
       if (!data.posts.length && !append) {
-        document.getElementById("posts-container").innerHTML =
-          `<div style="text-align:center;padding:60px;color:var(--text-3);">
-            <i class="ti ti-file-off" style="font-size:40px;display:block;margin-bottom:12px;"></i>
-            No posts found.
-          </div>`;
+        document.getElementById("posts-container").innerHTML = currentScope === "following"
+          ? `<div style="text-align:center;padding:60px;color:var(--text-3);">
+              <i class="ti ti-users" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+              No posts from physicians you follow yet.<br>
+              <span style="font-size:12px;">Follow colleagues from their profile to see their posts here.</span>
+            </div>`
+          : `<div style="text-align:center;padding:60px;color:var(--text-3);">
+              <i class="ti ti-file-off" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+              No posts found.
+            </div>`;
         document.getElementById("load-more").style.display = "none";
         return;
       }
@@ -445,9 +464,18 @@ async function loadUnreadCounts() {
 }
 
   function setFilter(btn, type) {
-    document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+    btn.parentElement.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
     currentFilter = type;
+    loadPosts();
+  }
+
+  let currentScope = "all";
+
+  function setFeedScope(scope) {
+    currentScope = scope;
+    document.getElementById("scope-btn-all").classList.toggle("active", scope === "all");
+    document.getElementById("scope-btn-following").classList.toggle("active", scope === "following");
     loadPosts();
   }
 

@@ -61,6 +61,43 @@ def send_password_reset_email(to_email, full_name, reset_link):
     return send_email(to_email, "Reset your Morixa Hub password", html)
 
 
+def send_digest_email(to_email, full_name, items):
+    """
+    items: liste de dicts {title, author_name, post_type, url}
+    Résumé hebdomadaire des publications des médecins suivis.
+    """
+    rows = "".join(f"""
+      <div style="padding:12px 0; border-bottom:1px solid #eee;">
+        <a href="{it['url']}" style="color:#185FA5; font-weight:600; text-decoration:none; font-size:14px;">
+          {it['title']}
+        </a>
+        <div style="color:#888; font-size:12px; margin-top:2px;">
+          by Dr. {it['author_name']} &middot; {it['post_type']}
+        </div>
+      </div>
+    """ for it in items)
+
+    html = f"""
+    <div style="font-family:sans-serif; max-width:480px; margin:0 auto; padding:24px;">
+      <h2 style="color:#1a1a1a;">Your weekly digest</h2>
+      <p style="color:#555; line-height:1.6;">
+        Hello Dr. {full_name}, here's what physicians you follow have shared this week:
+      </p>
+      <div style="margin:16px 0;">{rows}</div>
+      <a href="https://morixa-hub-api.onrender.com"
+         style="display:inline-block; background:#185FA5; color:#fff;
+                padding:12px 24px; border-radius:8px; text-decoration:none;
+                font-weight:600; margin:16px 0;">
+        Open Morixa Hub
+      </a>
+      <p style="color:#888; font-size:12px;">
+        You're receiving this because you follow physicians on Morixa Hub.
+      </p>
+    </div>
+    """
+    return send_email(to_email, "Your Morixa Hub weekly digest", html)
+
+
 def send_welcome_email(to_email, full_name):
     html = f"""
     <div style="font-family:sans-serif; max-width:480px; margin:0 auto; padding:24px;">

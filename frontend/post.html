@@ -285,6 +285,10 @@
             <button class="action-btn" onclick="sharePost()">
               <i class="ti ti-share"></i> Share
             </button>
+            ${author.id !== getUserId() ? `
+            <button class="action-btn" onclick="openReportModal('post', ${p.id})" title="Report this post">
+              <i class="ti ti-flag"></i>
+            </button>` : ""}
             <span class="views-count"><i class="ti ti-eye"></i> ${(p.views||0).toLocaleString()}</span>
           </div>
         </div>

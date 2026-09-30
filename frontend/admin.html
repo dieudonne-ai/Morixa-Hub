@@ -96,6 +96,33 @@
     .empty-state { text-align: center; padding: 48px; color: var(--text-3); }
     .empty-state i { font-size: 40px; display: block; margin-bottom: 12px; }
 
+    /* Reports */
+    .report-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .report-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .report-target-type {
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+      padding: 3px 9px; border-radius: var(--radius-sm);
+      background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border);
+    }
+    .report-reason { font-size: 13px; color: var(--text-1); line-height: 1.6; }
+    .report-target-preview {
+      padding: 10px 14px; background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: 12px; color: var(--text-2);
+    }
+    .report-target-preview .label { font-weight: 600; color: var(--text-1); }
+    .report-meta { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+    .report-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .status-reviewed  { background: var(--tag-art-bg); color: var(--tag-art-fg); border-color: var(--tag-art-bdr); }
+    .status-dismissed { background: var(--surface-2); color: var(--text-3); border-color: var(--border-2); }
+
     /* Doc modal */
     .doc-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 200; }
     .doc-modal.hidden { display: none; }
@@ -120,28 +147,66 @@
 <div class="page-wrap">
 
   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-    <div class="page-title"><i class="ti ti-shield-check"></i> Verification Requests</div>
-    <button class="btn" onclick="loadAll()"><i class="ti ti-refresh"></i> Refresh</button>
+    <div class="page-title"><i class="ti ti-shield-check"></i> Admin panel</div>
+    <button class="btn" onclick="refreshCurrentSection()"><i class="ti ti-refresh"></i> Refresh</button>
   </div>
 
-  <!-- Stats -->
-  <div class="stats-bar">
-    <div class="stat-card"><div class="stat-num" id="stat-pending">—</div><div class="stat-label">Pending review</div></div>
-    <div class="stat-card"><div class="stat-num" id="stat-approved">—</div><div class="stat-label">Approved</div></div>
-    <div class="stat-card"><div class="stat-num" id="stat-rejected">—</div><div class="stat-label">Rejected</div></div>
-    <div class="stat-card"><div class="stat-num" id="stat-users">—</div><div class="stat-label">Total users</div></div>
-  </div>
-
-  <!-- Tabs -->
+  <!-- Section switch -->
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(this,'pending')">Pending</button>
-    <button class="tab-btn" onclick="switchTab(this,'approved')">Approved</button>
-    <button class="tab-btn" onclick="switchTab(this,'rejected')">Rejected</button>
-    <button class="tab-btn" onclick="switchTab(this,'all')">All</button>
+    <button class="tab-btn active" id="section-btn-verif" onclick="switchSection('verif')">
+      <i class="ti ti-shield-check"></i> Verification requests
+    </button>
+    <button class="tab-btn" id="section-btn-reports" onclick="switchSection('reports')">
+      <i class="ti ti-flag"></i> Reports
+    </button>
   </div>
 
-  <div id="requests-container">
-    <div style="text-align:center;padding:40px;color:var(--text-3);">Loading...</div>
+  <!-- ═══════════════ VERIFICATION SECTION ═══════════════ -->
+  <div id="panel-verif">
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-card"><div class="stat-num" id="stat-pending">—</div><div class="stat-label">Pending review</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-approved">—</div><div class="stat-label">Approved</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-rejected">—</div><div class="stat-label">Rejected</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-users">—</div><div class="stat-label">Total users</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" style="margin-top:14px;">
+      <button class="tab-btn active" onclick="switchTab(this,'pending')">Pending</button>
+      <button class="tab-btn" onclick="switchTab(this,'approved')">Approved</button>
+      <button class="tab-btn" onclick="switchTab(this,'rejected')">Rejected</button>
+      <button class="tab-btn" onclick="switchTab(this,'all')">All</button>
+    </div>
+
+    <div id="requests-container" style="margin-top:14px;">
+      <div style="text-align:center;padding:40px;color:var(--text-3);">Loading...</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ REPORTS SECTION ═══════════════ -->
+  <div id="panel-reports" style="display:none;">
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-card"><div class="stat-num" id="stat-reports-pending">—</div><div class="stat-label">Pending reports</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-reports-reviewed">—</div><div class="stat-label">Reviewed</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-reports-dismissed">—</div><div class="stat-label">Dismissed</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-reports-total">—</div><div class="stat-label">Total reports</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" style="margin-top:14px;">
+      <button class="tab-btn active" onclick="switchReportTab(this,'pending')">Pending</button>
+      <button class="tab-btn" onclick="switchReportTab(this,'reviewed')">Reviewed</button>
+      <button class="tab-btn" onclick="switchReportTab(this,'dismissed')">Dismissed</button>
+      <button class="tab-btn" onclick="switchReportTab(this,'all')">All</button>
+    </div>
+
+    <div id="reports-container" style="margin-top:14px;">
+      <div style="text-align:center;padding:40px;color:var(--text-3);">Loading...</div>
+    </div>
   </div>
 
 </div>
@@ -164,6 +229,22 @@
 <script>
   let ALL_REQUESTS = [];
   let currentTab   = "pending";
+  let ALL_REPORTS  = [];
+  let currentReportTab = "pending";
+  let currentSection   = "verif";
+
+  function switchSection(section) {
+    currentSection = section;
+    document.getElementById("section-btn-verif").classList.toggle("active", section === "verif");
+    document.getElementById("section-btn-reports").classList.toggle("active", section === "reports");
+    document.getElementById("panel-verif").style.display    = section === "verif"    ? "" : "none";
+    document.getElementById("panel-reports").style.display  = section === "reports"  ? "" : "none";
+    if (section === "reports" && !ALL_REPORTS.length) loadReports();
+  }
+
+  function refreshCurrentSection() {
+    if (currentSection === "verif") loadAll(); else loadReports();
+  }
 
   async function loadAll() {
     try {
@@ -190,7 +271,7 @@
   }
 
   function switchTab(btn, tab) {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     currentTab = tab;
     renderRequests();
@@ -326,6 +407,117 @@
   }
 
   function closeDocModal() { document.getElementById("doc-modal").classList.add("hidden"); }
+
+  // ── Reports ──────────────────────────────────────────────
+
+  async function loadReports() {
+    try {
+      ALL_REPORTS = await apiFetch("/reports/admin/all");
+      document.getElementById("stat-reports-pending").textContent   = ALL_REPORTS.filter(r=>r.status==="pending").length;
+      document.getElementById("stat-reports-reviewed").textContent  = ALL_REPORTS.filter(r=>r.status==="reviewed").length;
+      document.getElementById("stat-reports-dismissed").textContent = ALL_REPORTS.filter(r=>r.status==="dismissed").length;
+      document.getElementById("stat-reports-total").textContent     = ALL_REPORTS.length;
+      renderReports();
+    } catch(e) {
+      document.getElementById("reports-container").innerHTML =
+        `<div class="empty-state"><i class="ti ti-wifi-off"></i><p>${e.error || "Could not load reports (admin access required)."}</p></div>`;
+    }
+  }
+
+  function switchReportTab(btn, tab) {
+    btn.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentReportTab = tab;
+    renderReports();
+  }
+
+  function renderReports() {
+    const list = currentReportTab === "all"
+      ? ALL_REPORTS
+      : ALL_REPORTS.filter(r => r.status === currentReportTab);
+
+    if (!list.length) {
+      document.getElementById("reports-container").innerHTML =
+        `<div class="empty-state"><i class="ti ti-inbox"></i><p>No ${currentReportTab} reports.</p></div>`;
+      return;
+    }
+
+    document.getElementById("reports-container").innerHTML =
+      `<div style="display:flex;flex-direction:column;gap:12px;">${list.map(r => renderReportCard(r)).join("")}</div>`;
+  }
+
+  const TARGET_LINKS = {
+    user: id => `/profile.html?id=${id}`,
+    post: id => `/post.html?id=${id}`,
+    repo: id => `/repo-detail.html?id=${id}`,
+  };
+
+  function renderReportCard(r) {
+    const reporter = r.reporter || {};
+    const preview   = r.target_preview || {};
+    const isPending = r.status === "pending";
+    const link      = TARGET_LINKS[r.target_type]?.(r.target_id);
+    const canDelete = preview.exists && r.target_type !== "user";
+
+    return `
+      <div class="report-card" id="report-${r.id}">
+        <div class="report-top">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="report-target-type">${r.target_type}</span>
+            <span class="report-meta">reported by Dr. ${reporter.full_name || "Unknown"} · ${timeAgo(r.created_at)}</span>
+          </div>
+          <span class="status-tag status-${r.status}">${r.status.toUpperCase()}</span>
+        </div>
+
+        <div class="report-reason">${escapeHtmlAdmin(r.reason)}</div>
+
+        <div class="report-target-preview">
+          ${preview.exists
+            ? `<span class="label">${escapeHtmlAdmin(preview.label || "")}</span> — ${escapeHtmlAdmin((preview.detail||"").slice(0,150))}
+               ${link ? ` · <a href="${link}" target="_blank" style="color:var(--text-2);">View <i class="ti ti-external-link" style="font-size:11px;"></i></a>` : ""}`
+            : `<em>${preview.note || "This content no longer exists."}</em>`}
+        </div>
+
+        ${isPending ? `
+        <div class="report-actions">
+          <button class="btn btn-sm" onclick="dismissReport(${r.id})">
+            <i class="ti ti-circle-check"></i> Dismiss
+          </button>
+          ${canDelete ? `
+          <button class="btn btn-reject btn-sm" onclick="deleteReportedContent(${r.id}, '${r.target_type}', ${r.target_id})">
+            <i class="ti ti-trash"></i> Delete content
+          </button>` : ""}
+        </div>` : ""}
+      </div>`;
+  }
+
+  async function dismissReport(id) {
+    try {
+      await apiFetch(`/reports/admin/${id}/dismiss`, { method: "POST" });
+      const r = ALL_REPORTS.find(x => x.id === id);
+      if (r) r.status = "dismissed";
+      renderReports();
+      loadReports();
+      showToast("Report dismissed", "success");
+    } catch(e) {
+      showToast(e.error || "Action failed", "error");
+    }
+  }
+
+  async function deleteReportedContent(id, targetType, targetId) {
+    try {
+      await apiFetch(`/reports/admin/content/${targetType}/${targetId}`, { method: "DELETE" });
+      showToast("Content deleted", "success");
+      loadReports();
+    } catch(e) {
+      showToast(e.error || "Action failed", "error");
+    }
+  }
+
+  function escapeHtmlAdmin(s) {
+    if (!s) return "";
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
 
   function timeAgo(s) {
     const d = (Date.now() - new Date(s)) / 1000;

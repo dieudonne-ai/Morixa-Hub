@@ -120,6 +120,29 @@ def fork_repo(repo_id):
     }), 201
 
 
+@repos_bp.put("/<int:repo_id>")
+def update_repo(repo_id):
+    """Rename / re-describe / change visibility. Owner only."""
+    repo = Repository.query.get_or_404(repo_id)
+    d    = request.get_json() or {}
+    uid  = d.get("user_id")
+
+    if repo.user_id != uid:
+        return jsonify({"error": "Not authorized"}), 403
+
+    name = (d.get("name") or "").strip()
+    if not name:
+        return jsonify({"error": "Name cannot be empty"}), 400
+
+    repo.name        = name
+    repo.description = (d.get("description") or "").strip() or None
+    if "is_public" in d:
+        repo.is_public = bool(d.get("is_public"))
+
+    db.session.commit()
+    return jsonify(_repo_dict(repo, viewer_id=uid))
+
+
 @repos_bp.delete("/<int:repo_id>")
 def delete_repo(repo_id):
     repo = Repository.query.get_or_404(repo_id)

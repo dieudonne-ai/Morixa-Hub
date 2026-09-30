@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import db, Post, User, Comment, Like
+from models import db, Post, User, Comment, Like, Follow
 from services.points import award_points
 
 posts_bp = Blueprint("posts", __name__, url_prefix="/api/posts")
@@ -13,6 +13,8 @@ def get_posts():
     specialty = request.args.get("specialty")
     search    = request.args.get("search")
     user_id   = request.args.get("user_id", type=int)
+    feed      = request.args.get("feed")          # None | "following"
+    viewer_id = request.args.get("viewer_id", type=int)
 
     q = Post.query.order_by(Post.created_at.desc())
     if post_type: q = q.filter_by(post_type=post_type)
@@ -23,6 +25,16 @@ def get_posts():
             Post.title.ilike(f"%{search}%") |
             Post.body.ilike(f"%{search}%")
         )
+
+    if feed == "following":
+        if not viewer_id:
+            return jsonify({"error": "viewer_id is required for the following feed"}), 400
+        following_ids = [
+            f.following_id for f in Follow.query.filter_by(follower_id=viewer_id).all()
+        ]
+        if not following_ids:
+            return jsonify({"posts": [], "total": 0, "pages": 1})
+        q = q.filter(Post.user_id.in_(following_ids))
 
     p = q.paginate(page=page, per_page=per_page, error_out=False)
     return jsonify({
