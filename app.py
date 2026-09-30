@@ -49,9 +49,14 @@ def create_app():
     from routes.follows      import follows_bp
     from routes.verification import verif_bp
     from routes.privacy      import privacy_bp
+    from routes.admin        import admin_bp
+    from routes.ai           import ai_bp
+    from routes.reports      import reports_bp
+    from routes.blocks       import blocks_bp
 
     for bp in [auth_bp, posts_bp, files_bp, messages_bp,
-               users_bp, repos_bp, follows_bp, verif_bp, privacy_bp]:
+               users_bp, repos_bp, follows_bp, verif_bp, privacy_bp,
+               admin_bp, ai_bp, reports_bp, blocks_bp]:
         app.register_blueprint(bp)
 
     # Frontend statique

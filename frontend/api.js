@@ -191,16 +191,16 @@ const Messages = {
   send(receiverId, body) {
     return apiFetch("/messages/", {
       method: "POST",
-      body: JSON.stringify({ sender_id: getUserId(), receiver_id: receiverId, body }),
+      body: JSON.stringify({ receiver_id: receiverId, body }),
     });
   },
 
   conversation(otherUserId) {
-    return apiFetch(`/messages/conversation/${getUserId()}/${otherUserId}`);
+    return apiFetch(`/messages/conversation/${otherUserId}`);
   },
 
   inbox() {
-    return apiFetch(`/messages/inbox/${getUserId()}`);
+    return apiFetch("/messages/inbox");
   },
 };
 
@@ -312,6 +312,80 @@ async function downloadFile(fileId, fileName) {
   } catch (e) {
     showToast("Could not download file.", "error");
   }
+}
+
+
+// ════════════════════════════════════════════════════════════
+// SHARED REPORT MODAL (used on posts, repos, profiles, messages)
+// ════════════════════════════════════════════════════════════
+
+function openReportModal(targetType, targetId) {
+  let modal = document.getElementById("shared-report-modal");
+  if (!modal) {
+    injectReportModalStyles();
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="report-modal-overlay hidden" id="shared-report-modal">
+        <div class="report-modal-box">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:14px;font-weight:600;color:var(--text-1);">Report content</div>
+            <button class="btn btn-sm" onclick="closeReportModal()"><i class="ti ti-x"></i></button>
+          </div>
+          <textarea id="shared-report-reason" rows="4" placeholder="Describe why you are reporting this (harassment, spam, inappropriate content...)"></textarea>
+          <div style="display:flex;justify-content:flex-end;gap:8px;">
+            <button class="btn btn-sm" onclick="closeReportModal()">Cancel</button>
+            <button class="btn btn-sm" id="shared-report-submit" onclick="submitSharedReport()">
+              <i class="ti ti-flag"></i> Submit report
+            </button>
+          </div>
+        </div>
+      </div>`);
+    modal = document.getElementById("shared-report-modal");
+  }
+  modal.dataset.targetType = targetType;
+  modal.dataset.targetId = targetId;
+  document.getElementById("shared-report-reason").value = "";
+  modal.classList.remove("hidden");
+}
+
+function closeReportModal() {
+  document.getElementById("shared-report-modal")?.classList.add("hidden");
+}
+
+async function submitSharedReport() {
+  const modal = document.getElementById("shared-report-modal");
+  const reason = document.getElementById("shared-report-reason").value.trim();
+  if (!reason) return showToast("Please describe the issue before submitting.", "error");
+  const btn = document.getElementById("shared-report-submit");
+  btn.disabled = true;
+  try {
+    await apiFetch("/reports/", {
+      method: "POST",
+      body: JSON.stringify({
+        target_type: modal.dataset.targetType,
+        target_id: parseInt(modal.dataset.targetId, 10),
+        reason,
+      }),
+    });
+    closeReportModal();
+    showToast("Report submitted. Our team will review it.", "success");
+  } catch(e) {
+    showToast(e.error || "Could not submit report.", "error");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function injectReportModalStyles() {
+  if (document.getElementById("shared-report-modal-style")) return;
+  const style = document.createElement("style");
+  style.id = "shared-report-modal-style";
+  style.textContent = `
+    .report-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 300; }
+    .report-modal-overlay.hidden { display: none; }
+    .report-modal-box { background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--radius-xl); padding: 20px; width: 420px; max-width: 95vw; display: flex; flex-direction: column; gap: 12px; }
+    .report-modal-box textarea { width: 100%; resize: vertical; padding: 10px 12px; border: 1px solid var(--border-2); border-radius: var(--radius); background: var(--surface-2); color: var(--text-1); font-family: var(--font); font-size: 13px; outline: none; }
+  `;
+  document.head.appendChild(style);
 }
 
 

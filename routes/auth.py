@@ -64,7 +64,7 @@ def login():
 @auth_bp.post("/forgot-password")
 @rate_limit(max_calls=5, window_seconds=600, key_prefix="forgot")
 def forgot_password():
-    email = clean_str(request.get_json(silent=True, {}).get("email"), 150).lower()
+    email = clean_str((request.get_json(silent=True) or {}).get("email"), 150).lower()
     generic = jsonify({"message": "If an account exists with this email, a reset link has been sent."})
 
     user = User.query.filter_by(email=email).first()

@@ -6,8 +6,8 @@ Accès restreint aux utilisateurs dont l'email est dans ADMIN_EMAILS.
 """
 
 from flask import Blueprint, request, jsonify, send_file, g
-from models import db, User, VerificationRequest, Notification
-from datetime import datetime
+from models import db, User, VerificationRequest, Notification, Follow, Post
+from datetime import datetime, timedelta
 import os, functools, jwt
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
@@ -140,8 +140,60 @@ def list_users():
     })
 
 
+# ── Digest hebdomadaire ────────────────────────────────────────
+# Déclenché par un cron externe gratuit (cron-job.org, GitHub Actions...)
+# puisque Render free tier n'a pas de cron intégré. Protégé par un secret
+# partagé (Config.DIGEST_SECRET) plutôt qu'un token admin, pour rester
+# appelable depuis un service externe sans session utilisateur.
+#
+# Exemple d'appel hebdomadaire (cron-job.org, dimanche 8h UTC) :
+#   POST https://morixa-hub-api.onrender.com/api/admin/digest/run?secret=<DIGEST_SECRET>
+@admin_bp.post("/digest/run")
+def run_weekly_digest():
+    from config import Config
+    secret = request.args.get("secret", "")
+    if not Config.DIGEST_SECRET or secret != Config.DIGEST_SECRET:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from services.email import send_digest_email
+
+    since  = datetime.utcnow() - timedelta(days=7)
+    users  = User.query.all()
+    frontend_url = os.environ.get("FRONTEND_URL", "https://morixa-hub-api.onrender.com")
+
+    sent, skipped = 0, 0
+    for user in users:
+        following_ids = [f.following_id for f in Follow.query.filter_by(follower_id=user.id).all()]
+        if not following_ids:
+            skipped += 1
+            continue
+
+        posts = Post.query.filter(
+            Post.user_id.in_(following_ids),
+            Post.created_at >= since,
+        ).order_by(Post.created_at.desc()).limit(5).all()
+
+        if not posts:
+            skipped += 1
+            continue
+
+        items = [{
+            "title":       p.title,
+            "author_name": p.author.full_name if p.author else "Unknown",
+            "post_type":   p.post_type,
+            "url":         f"{frontend_url}/post.html?id={p.id}",
+        } for p in posts]
+
+        if send_digest_email(user.email, user.full_name, items):
+            sent += 1
+        else:
+            skipped += 1
+
+    return jsonify({"message": "Digest run complete", "sent": sent, "skipped": skipped})
+
+
 # ── app.py — N'oubliez pas d'ajouter dans create_app() :
-#   
+#
 #
 # config.py — Ajoutez :
-#   
+#

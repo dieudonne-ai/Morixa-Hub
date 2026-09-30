@@ -3,6 +3,7 @@ from models import db, Message, User, Notification
 from sqlalchemy import or_
 from utils.auth import require_auth
 from utils.security import clean_str, require_json, rate_limit
+from routes.blocks import is_blocked_either_way
 
 messages_bp = Blueprint("messages", __name__, url_prefix="/api/messages")
 
@@ -36,6 +37,8 @@ def send_message():
         return jsonify({"error": "You cannot message yourself"}), 400
     if not User.query.get(receiver_id):
         return jsonify({"error": "Recipient not found"}), 404
+    if is_blocked_either_way(g.user_id, receiver_id):
+        return jsonify({"error": "You cannot message this user."}), 403
 
     msg = Message(sender_id=g.user_id, receiver_id=receiver_id, body=body)
     db.session.add(msg)
@@ -62,6 +65,9 @@ def conversation(peer_id):
     """Messages entre l'utilisateur connecté et peer_id (paginé, marque comme lus)."""
     page     = request.args.get("page", 1, type=int)
     per_page = min(request.args.get("per_page", 50, type=int), 100)
+
+    if is_blocked_either_way(g.user_id, peer_id):
+        return jsonify({"error": "This conversation is unavailable."}), 403
 
     q = Message.query.filter(
         or_(
@@ -125,6 +131,8 @@ def inbox():
 
     result = []
     for peer_id in ordered:
+        if is_blocked_either_way(g.user_id, peer_id):
+            continue
         m    = seen[peer_id]
         peer = db.session.get(User, peer_id)
         unread = Message.query.filter_by(

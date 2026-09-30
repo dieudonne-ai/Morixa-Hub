@@ -45,3 +45,29 @@ class Config:
     # ── Environnement ──────────────────────────────────────────
     DEBUG = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
     TESTING = False
+
+    # ── Administration ──────────────────────────────────────────
+    # Emails (comma-separated) allowed to use /api/admin/* and the
+    # new Reports moderation endpoints. Set this in Render's env vars
+    # to the email(s) of your own Morixa Hub account(s).
+    ADMIN_EMAILS = set(
+        e.strip().lower()
+        for e in os.environ.get("ADMIN_EMAILS", "").split(",")
+        if e.strip()
+    )
+
+    # ── IA (optionnelle) ─────────────────────────────────────────
+    # AI_PROVIDER = "none" désactive proprement les endpoints /api/ai/*
+    # (ils répondent 502 "not configured" au lieu de planter).
+    AI_PROVIDER      = os.environ.get("AI_PROVIDER", "none").lower()
+    AI_API_KEY       = os.environ.get("AI_API_KEY", "")
+    AI_MODEL         = os.environ.get("AI_MODEL", "")
+    AI_MAX_TOKENS    = int(os.environ.get("AI_MAX_TOKENS", 800))
+    AI_RATE_LIMIT    = int(os.environ.get("AI_RATE_LIMIT", 30))       # appels / heure / utilisateur
+    AI_BODY_MAXCHARS = int(os.environ.get("AI_BODY_MAXCHARS", 6000))
+
+    # ── Emails automatiques ───────────────────────────────────────
+    # Secret partagé pour déclencher le digest hebdomadaire depuis un
+    # cron externe gratuit (cron-job.org, GitHub Actions...), puisque
+    # Render free tier n'a pas de cron intégré.
+    DIGEST_SECRET = os.environ.get("DIGEST_SECRET", "")

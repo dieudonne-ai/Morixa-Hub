@@ -177,6 +177,27 @@ class VerificationRequest(db.Model):
     reviewed_at   = db.Column(db.DateTime)
 
     
+class Block(db.Model):
+    __tablename__ = "blocks"
+    id         = db.Column(db.Integer, primary_key=True)
+    blocker_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    blocked_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    __table_args__ = (db.UniqueConstraint("blocker_id", "blocked_id", name="uq_block_pair"),)
+
+
+class Report(db.Model):
+    __tablename__ = "reports"
+    id          = db.Column(db.Integer, primary_key=True)
+    reporter_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    target_type = db.Column(db.String(20), nullable=False)   # user | post | repo | message
+    target_id   = db.Column(db.Integer, nullable=False)
+    reason      = db.Column(db.String(1000), nullable=False)
+    status      = db.Column(db.String(20), default="pending")  # pending | reviewed | dismissed
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewed_at = db.Column(db.DateTime)
+
+
 class PasswordReset(db.Model):
     __tablename__ = "password_resets"
     id         = db.Column(db.Integer, primary_key=True)

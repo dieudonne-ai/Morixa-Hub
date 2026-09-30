@@ -6,7 +6,6 @@
   <title>Morixa Hub — Messages</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
   <link rel="stylesheet" href="style.css">
-  <sript src="api.js"></script>
   <style>
     body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     .chat-layout { display: flex; flex: 1; overflow: hidden; }
@@ -211,6 +210,8 @@
   .dropdown-item:last-child { border-bottom: none; }
   .dropdown-item:hover { background: var(--surface-2); color: var(--text-1); }
   .dropdown-item i { font-size: 16px; }
+  .dropdown-item-danger { color: var(--tag-cas-fg, #c0392b); }
+  .dropdown-item-danger:hover { background: var(--tag-cas-bg, rgba(192,57,43,0.1)); }
 
   /* Message avec fichier joint */
   .msg-file {
@@ -379,6 +380,12 @@
       <div class="dropdown-item" onclick="clearConversation()">
         <i class="ti ti-trash"></i> Clear conversation
       </div>
+      <div class="dropdown-item" id="block-menu-item" onclick="toggleBlockPeer()">
+        <i class="ti ti-ban"></i> <span id="block-menu-label">Block physician</span>
+      </div>
+      <div class="dropdown-item dropdown-item-danger" onclick="reportPeer()">
+        <i class="ti ti-flag"></i> Report physician
+      </div>
     </div>
   </div>
 </div>
@@ -419,7 +426,7 @@
 
   async function init() {
     try {
-      conversations = await apiFetch(`/messages/inbox/${getUserId()}`);
+      conversations = await apiFetch("/messages/inbox");
       renderConvs(conversations);
 
       // Ouvrir directement une conv si ?peer= dans l'URL
@@ -509,6 +516,7 @@
     }
 
     await loadMessages(peerId);
+    refreshBlockStatus(peerId);
 
     clearInterval(pollTimer);
     pollTimer = setInterval(() => loadMessages(peerId), 5000);
@@ -525,7 +533,8 @@
 
   async function loadMessages(peerId) {
     try {
-      const msgs = await apiFetch(`/messages/conversation/${getUserId()}/${peerId}`);
+      const res  = await apiFetch(`/messages/conversation/${peerId}`);
+      const msgs = res.messages || res;
       const container = document.getElementById("chat-messages");
       const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 60;
       container.innerHTML = renderMessages(msgs);
@@ -575,7 +584,7 @@
     input.value = "";
     try {
       await apiFetch("/messages/",{method:"POST",body:JSON.stringify({
-        sender_id:getUserId(), receiver_id:activeConv.peer.id, body
+        receiver_id:activeConv.peer.id, body
       })});
       await loadMessages(activeConv.peer.id);
       const c = conversations.find(x=>x.peer?.id===activeConv.peer.id);
@@ -586,6 +595,43 @@
 
   function goToPeerProfile() {
     if (activeConv?.peer?.id) window.location.href=`/profile.html?id=${activeConv.peer.id}`;
+  }
+
+  async function toggleBlockPeer() {
+    document.getElementById("chat-menu").classList.add("hidden");
+    if (!activeConv?.peer?.id) return;
+    try {
+      const res = await apiFetch(`/blocks/${activeConv.peer.id}/toggle`, { method: "POST" });
+      updateBlockLabel(res.is_blocked);
+      showToast(res.is_blocked ? "Physician blocked." : "Physician unblocked.", "success");
+      if (res.is_blocked) {
+        document.getElementById("chat-messages").innerHTML =
+          `<div class="chat-empty"><i class="ti ti-ban"></i><p>You have blocked this physician. You will no longer see or send messages here.</p></div>`;
+        clearInterval(pollTimer);
+      } else {
+        loadMessages(activeConv.peer.id);
+      }
+    } catch(e) {
+      showToast(e.error || "Could not update block status.", "error");
+    }
+  }
+
+  function updateBlockLabel(isBlocked) {
+    const label = document.getElementById("block-menu-label");
+    if (label) label.textContent = isBlocked ? "Unblock physician" : "Block physician";
+  }
+
+  async function refreshBlockStatus(peerId) {
+    try {
+      const res = await apiFetch(`/blocks/${peerId}`);
+      updateBlockLabel(res.is_blocked);
+    } catch(e) {}
+  }
+
+  function reportPeer() {
+    document.getElementById("chat-menu").classList.add("hidden");
+    if (!activeConv?.peer?.id) return;
+    openReportModal("user", activeConv.peer.id);
   }
 
   function toggleMenu(e) {
@@ -616,7 +662,7 @@
       const uploaded = await uploadRes.json();
       const body = `📎 ${file.name} [file_id:${uploaded.file_id}]`;
       await apiFetch("/messages/",{method:"POST",body:JSON.stringify({
-        sender_id:getUserId(), receiver_id:activeConv.peer.id, body
+        receiver_id:activeConv.peer.id, body
       })});
       await loadMessages(activeConv.peer.id);
       showToast("File sent", "success");
